@@ -33,22 +33,9 @@ ENV NPM_CONFIG_PRODUCTION=true
 ENV npm_config_cache=/root/.npm
 ENV pip_cache_dir=/root/.cache/pip
 
-# 安装 apt-fast 以加速依赖安装
+# 安装构建阶段依赖（包含编译工具）
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-    aria2 \
-    gnupg2 \
-    curl \
-    && echo "deb http://ppa.launchpad.net/apt-fast/stable/ubuntu focal main" > /etc/apt/sources.list.d/apt-fast.list && \
-    curl -fsSL https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xA2166B8DE8BDC336 | apt-key add - && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends apt-fast && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# 使用 apt-fast 安装构建阶段依赖（包含编译工具）
-RUN apt-fast update -y && \
-    apt-fast install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends --fix-missing --fix-broken \
     git \
     python3 \
     python3-pip \
@@ -56,7 +43,7 @@ RUN apt-fast update -y && \
     curl \
     ca-certificates \
     build-essential \
-    && apt-fast clean \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # 配置 wget 镜像源
