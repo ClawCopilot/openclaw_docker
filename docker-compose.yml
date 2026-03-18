@@ -1,0 +1,65 @@
+services:
+  # 网关 1 - serv
+  serv:
+    build: .
+    container_name: serv
+    ports:
+      - "42700:18798"
+    volumes:
+      - ./serv:/app/data
+    environment:
+      - GATEWAY_ID=serv
+      - PORT=18798
+      - NODE_ENV=production
+      - npm_config_registry=https://registry.npmmirror.com/
+      - pnpm_config_registry=https://registry.npmmirror.com/
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    privileged: true
+
+  # 网关 2 - Coder1
+  coder1:
+    build: .
+    container_name: coder1
+    volumes:
+      - ./coder1:/app/data
+    environment:
+      - GATEWAY_ID=coder1
+      - PORT=18798
+      - NODE_ENV=production
+      - npm_config_registry=https://registry.npmmirror.com/
+      - pnpm_config_registry=https://registry.npmmirror.com/
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    privileged: true
+
+  # 网关 3 - Coder2
+  coder2:
+    build: .
+    container_name: coder2
+    volumes:
+      - ./coder2:/app/data
+    environment:
+      - GATEWAY_ID=coder2
+      - PORT=18798
+      - NODE_ENV=production
+      - npm_config_registry=https://registry.npmmirror.com/
+      - pnpm_config_registry=https://registry.npmmirror.com/
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    privileged: true
