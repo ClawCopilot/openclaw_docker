@@ -33,6 +33,22 @@ ENV NPM_CONFIG_PRODUCTION=true
 ENV npm_config_cache=/root/.npm
 ENV pip_cache_dir=/root/.cache/pip
 
+# 复制 GitHub Hosts 更新脚本到用户目录
+COPY update_hosts.sh /root/update_hosts.sh
+RUN chmod +x /root/update_hosts.sh
+
+# 首次执行脚本
+RUN /root/update_hosts.sh
+
+# 安装 cron 并设置定时任务（每5小时执行一次）
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends cron && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
+    chmod 644 /etc/cron.d/update_hosts && \
+    crontab /etc/cron.d/update_hosts
+
 # 安装构建阶段依赖（包含编译工具）
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends --fix-missing --fix-broken \
@@ -76,5 +92,5 @@ EXPOSE 18798
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:18798/health || exit 1
 
-# 启动命令
-CMD ["openclaw", "start"]
+# 启动命令（同时启动 cron 服务和 OpenClaw）
+CMD service cron start && openclaw start
