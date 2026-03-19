@@ -78,21 +78,8 @@ RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
 # 配置 wget 镜像源
 RUN echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc
 
-# 安装 pnpm
-RUN npm install -g pnpm
-
-# 配置 pnpm 国内镜像源
-RUN pnpm config set registry https://registry.npmmirror.com/ && \
-    pnpm config set disturl https://npmmirror.com/mirrors/node && \
-    pnpm config set sass_binary_site https://npmmirror.com/mirrors/node-sass && \
-    pnpm config set electron_mirror https://npmmirror.com/mirrors/electron/ && \
-    pnpm config set puppeteer_download_host https://npmmirror.com/mirrors && \
-    pnpm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
-    pnpm config set geckodriver_cdnurl https://npmmirror.com/mirrors/geckodriver
-
-# 全局安装 OpenClaw
-RUN pnpm add -g openclaw@latest
-RUN pnpm approve-builds -g
+# 直接使用 npm 全局安装 OpenClaw
+RUN npm install -g openclaw@latest
 
 # 暴露端口
 EXPOSE 18798
@@ -101,5 +88,5 @@ EXPOSE 18798
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:18798/health || exit 1
 
-# 启动命令（同时启动 cron 服务和 OpenClaw）
-CMD service cron start && openclaw start
+# 启动命令（同时启动 cron 服务和 OpenClaw 网关，允许未配置）
+CMD service cron start && openclaw gateway --allow-unconfigured
