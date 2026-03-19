@@ -40,42 +40,35 @@ RUN mkdir -p /root/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.
 # 配置 wget 镜像源
 RUN echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc
 
-# 配置网络和构建相关环境变量
-ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENV npm_config_registry=https://registry.npmmirror.com/
-ENV npm_config_disturl=https://npmmirror.com/mirrors/node
-ENV PYTHONUNBUFFERED=1
-ENV NODE_ENV=production
-ENV NPM_CONFIG_PRODUCTION=true
-
 # 配置缓存相关环境变量
 ENV npm_config_cache=/root/.npm
 ENV pip_cache_dir=/root/.cache/pip
 
-# 复制 GitHub Hosts 更新脚本到用户目录
-COPY update_hosts.sh /root/update_hosts.sh
-RUN chmod +x /root/update_hosts.sh
-
-# 修改脚本以适应 Debian 系统
-RUN sed -i 's/sudo //g' /root/update_hosts.sh && \
-    sed -i 's/dscacheutil -flushcache && killall -HUP mDNSResponder/echo "DNS cache flushed"/g' /root/update_hosts.sh
-
-# 首次执行脚本
-RUN /root/update_hosts.sh
-
 # 安装构建阶段依赖（包含编译工具）
-RUN apt-get update -y && \
+RUN apt-get update -y --allow-unauthenticated && \
     apt-get install -y --no-install-recommends --fix-missing --fix-broken \
     git \
     python3 \
     python3-pip \
-    wget \
     curl \
     ca-certificates \
     build-essential \
     cron \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# 单独安装 wget
+RUN apt-get update -y --allow-unauthenticated && \
+    apt-get install -y --no-install-recommends wget || echo "wget 安装失败，继续执行" && \
+    apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# 复制 GitHub Hosts 更新脚本到用户目录
+COPY update_hosts.sh /root/update_hosts.sh
+RUN chmod +x /root/update_hosts.sh
+
+# 首次执行脚本
+RUN /root/update_hosts.sh
 
 # 设置定时任务（每5小时执行一次）
 RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \

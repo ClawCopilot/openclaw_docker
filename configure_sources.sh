@@ -1,41 +1,63 @@
 #!/bin/bash
 MIRROR_URL=$1
 
-if [ -f /etc/apt/sources.list.d/debian.sources ]; then
-    # Debian 12+ (Bookworm)
-    echo "检测到 Debian 12+，正在配置 .sources 格式..."
-    cat > /etc/apt/sources.list.d/debian.sources <<'EOF'
-Types: deb deb-src
-URIs: https://${MIRROR_URL}/debian/
-Suites: bookworm bookworm-updates bookworm-security
-Components: main contrib non-free non-free-firmware
-Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
-EOF
-    # 替换变量
-    sed -i "s|\${MIRROR_URL}|$MIRROR_URL|g" /etc/apt/sources.list.d/debian.sources
-    echo "Debian 12 源配置完成。"
-elif [ -f /etc/apt/sources.list ]; then
-    # Debian 11- (Bullseye)
-    CODENAME=$(cat /etc/os-release | grep "^VERSION_CODENAME=" | cut -d= -f2)
-    echo "检测到 Debian 11 或更早 (版本代号: $CODENAME)，正在配置 sources.list 格式..."
-    cat > /etc/apt/sources.list <<'EOF'
-deb https://${MIRROR_URL}/debian/ ${CODENAME} main contrib non-free
-deb-src https://${MIRROR_URL}/debian/ ${CODENAME} main contrib non-free
-deb https://${MIRROR_URL}/debian-security/ ${CODENAME}-security main contrib non-free
-deb-src https://${MIRROR_URL}/debian-security/ ${CODENAME}-security main contrib non-free
-deb https://${MIRROR_URL}/debian/ ${CODENAME}-updates main contrib non-free
-deb-src https://${MIRROR_URL}/debian/ ${CODENAME}-updates main contrib non-free
-deb https://${MIRROR_URL}/debian/ ${CODENAME}-backports main contrib non-free
-deb-src https://${MIRROR_URL}/debian/ ${CODENAME}-backports main contrib non-free
-EOF
-    # 替换变量
-    sed -i "s|\${MIRROR_URL}|$MIRROR_URL|g" /etc/apt/sources.list
-    sed -i "s|\${CODENAME}|$CODENAME|g" /etc/apt/sources.list
-    echo "Debian 11 源配置完成。"
+# 检测系统类型
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    echo "系统信息：$NAME $VERSION"
 else
-    echo "错误：未找到标准的源配置文件！"
+    echo "错误：无法读取系统信息！"
     exit 1
+fi
+
+# 检查 Debian 版本并配置相应的源
+if [ -f /etc/apt/sources.list.d/debian.sources ]; then
+    # Debian 12+ 使用 .sources 格式
+    echo "检测到 Debian 12+，使用 .sources 格式配置源"
+    cat > /etc/apt/sources.list.d/debian.sources <<EOF
+Types: deb
+URIs: http://${MIRROR_URL}/debian
+Suites: bookworm bookworm-updates bookworm-backports
+Components: main contrib non-free non-free-firmware
+
+Types: deb
+URIs: http://${MIRROR_URL}/debian-security
+Suites: bookworm-security
+Components: main contrib non-free non-free-firmware
+EOF
+    echo "源配置完成：使用阿里云镜像源 (.sources 格式)"
+elif [ -f /etc/apt/sources.list ]; then
+    # 旧版本 Debian 使用 sources.list 格式
+    echo "检测到旧版本 Debian，使用 sources.list 格式配置源"
+    # 备份原文件
+    cp /etc/apt/sources.list /etc/apt/sources.list.bak
+    
+    # 使用阿里云镜像源
+    cat > /etc/apt/sources.list <<EOF
+deb http://${MIRROR_URL}/debian/ bookworm main contrib non-free non-free-firmware
+deb http://${MIRROR_URL}/debian/ bookworm-updates main contrib non-free non-free-firmware
+deb http://${MIRROR_URL}/debian/ bookworm-backports main contrib non-free non-free-firmware
+deb http://${MIRROR_URL}/debian-security/ bookworm-security main contrib non-free non-free-firmware
+EOF
+    
+    echo "源配置完成：使用阿里云镜像源 (sources.list 格式)"
+else
+    # 两种格式都不存在，创建 sources.list 文件
+    echo "未找到源配置文件，创建 sources.list 文件"
+    mkdir -p /etc/apt
+    cat > /etc/apt/sources.list <<EOF
+deb http://${MIRROR_URL}/debian/ bookworm main contrib non-free non-free-firmware
+deb http://${MIRROR_URL}/debian/ bookworm-updates main contrib non-free non-free-firmware
+deb http://${MIRROR_URL}/debian/ bookworm-backports main contrib non-free non-free-firmware
+deb http://${MIRROR_URL}/debian-security/ bookworm-security main contrib non-free non-free-firmware
+EOF
+    echo "源配置完成：创建并使用阿里云镜像源"
 fi
 
 # 清除旧缓存
 rm -rf /var/lib/apt/lists/*
+
+# 测试源是否可用
+echo "测试源连接..."
+apt-get update -y --allow-unauthenticated && echo "源连接成功！" || echo "源连接失败，可能需要检查网络或镜像源设置。"
+
