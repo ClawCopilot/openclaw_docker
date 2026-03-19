@@ -37,18 +37,16 @@ COPY .gitconfig /root/.gitconfig
 # 配置 Python pip 国内镜像源
 RUN mkdir -p /root/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > /root/.config/pip/pip.conf
 
-# 配置 wget 镜像源
-RUN echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc
-
 # 配置缓存相关环境变量
 ENV npm_config_cache=/root/.npm
 ENV pip_cache_dir=/root/.cache/pip
 
 # 安装构建阶段依赖（包含编译工具）
-RUN apt-get update -y --allow-unauthenticated && \
-    apt-get install -y --no-install-recommends --fix-missing --fix-broken \
+RUN echo "[LOG] 开始安装构建阶段依赖..." && \
+    apt-get update -y --allow-unauthenticated && \
+    echo "[LOG] 包列表更新完成，开始安装依赖包..." && \
+    apt-get install -y --no-install-recommends \
     git \
-    vim \
     sudo \
     python3 \
     python3-pip \
@@ -56,15 +54,16 @@ RUN apt-get update -y --allow-unauthenticated && \
     wget \
     ca-certificates \
     build-essential \
-    cron \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    cron && \
+    echo "[LOG] 依赖包安装完成，开始清理..." && \
+    apt-get clean && \
+    echo "[LOG] 清理完成"
 
-# 单独安装 wget
-RUN apt-get update -y --allow-unauthenticated && \
-    apt-get install -y --no-install-recommends wget || echo "wget 安装失败，继续执行" && \
-    apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# 配置 wget 镜像源
+RUN echo "[LOG] 配置 wget 镜像源..." && \
+    echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc && \
+    echo "[LOG] 清理临时文件..." && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # 复制 GitHub Hosts 更新脚本到用户目录
 COPY update_hosts.sh /root/update_hosts.sh
@@ -78,21 +77,44 @@ RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
     chmod 644 /etc/cron.d/update_hosts && \
     crontab /etc/cron.d/update_hosts
 
-# 配置 wget 镜像源
-RUN echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc
+# 清理临时文件
+RUN echo "[LOG] 清理临时文件..." && \
+    rm -rf /tmp/* /var/tmp/*
 
-# 安装 brew（使用国内镜像源）
-RUN echo -e "Y\n2\n5" | /bin/bash -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)" && \
-    # 配置 brew 环境变量
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc && \
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
-    # 配置 brew 国内镜像源
-    brew tap --custom-remote --force-auto-update homebrew/core https://mirrors.ustc.edu.cn/homebrew-core.git && \
-    brew tap --custom-remote --force-auto-update homebrew/cask https://mirrors.ustc.edu.cn/homebrew-cask.git && \
-    brew tap --custom-remote --force-auto-update homebrew/cask-versions https://mirrors.ustc.edu.cn/homebrew-cask-versions.git && \
-    # 设置 brew 镜像源环境变量
-    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
-    export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
+# 安装 brew（使用国内镜像源）- 暂时注释掉不执行
+# RUN echo "[LOG] 开始安装 brew..." && \
+#     # 创建非 root 用户
+#     useradd -m -s /bin/bash brewuser && \
+#     # 给 brewuser 添加 sudo 权限
+#     echo 'brewuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+#     # 创建 brew 安装目录并设置权限
+#     echo "[LOG] 创建 brew 安装目录..." && \
+#     mkdir -p /home/linuxbrew/.linuxbrew && \
+#     chown -R brewuser:brewuser /home/linuxbrew && \
+#     # 切换到 brewuser 安装 brew
+#     su - brewuser -c " \
+#         echo '[LOG] 从国内镜像源克隆 Homebrew 仓库...' && \
+#         git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
+#         echo '[LOG] 从国内镜像源克隆 Homebrew Core 仓库...' && \
+#         git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
+#         echo '[LOG] 创建 brew 符号链接...' && \
+#         ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
+#         echo '[LOG] 配置 brew 环境变量...' && \
+#         echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
+#         echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
+#         export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
+#         export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
+#         echo '[LOG] 配置 brew 国内镜像源...' && \
+#         brew tap --custom-remote --force-auto-update homebrew/cask https://mirrors.ustc.edu.cn/homebrew-cask.git && \
+#         brew tap --custom-remote --force-auto-update homebrew/cask-versions https://mirrors.ustc.edu.cn/homebrew-cask-versions.git \
+#     " && \
+#     # 为 root 用户配置 brew 环境变量
+#     echo "[LOG] 为 root 用户配置 brew 环境变量..." && \
+#     echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> /root/.bashrc && \
+#     echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
+#     export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
+#     export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
+#     echo "[LOG] brew 安装完成..."
 
 # 直接使用 npm 全局安装 OpenClaw
 RUN npm install -g openclaw@latest
