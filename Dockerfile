@@ -90,10 +90,6 @@ RUN pnpm config set registry https://registry.npmmirror.com/ && \
     pnpm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
     pnpm config set geckodriver_cdnurl https://npmmirror.com/mirrors/geckodriver
 
-# 创建 pnpm 符号链接
-RUN ln -s /usr/local/lib/node_modules/pnpm/bin/pnpm.js /usr/local/bin/pnpm && \
-    ln -s /usr/local/lib/node_modules/pnpm/bin/pnpx.js /usr/local/bin/pnpx
-
 # 全局安装 OpenClaw
 RUN pnpm add -g openclaw@latest
 RUN pnpm approve-builds -g
