@@ -10,8 +10,28 @@ else
     exit 1
 fi
 
-# 检查 Debian 版本并配置相应的源
-if [ -f /etc/apt/sources.list.d/debian.sources ]; then
+# 检查系统类型并配置相应的源
+if [[ "$NAME" == *"Ubuntu"* ]]; then
+    # Ubuntu 系统
+    echo "检测到 Ubuntu 系统，配置 Ubuntu 源"
+    # 备份原文件
+    if [ -f /etc/apt/sources.list ]; then
+        cp /etc/apt/sources.list /etc/apt/sources.list.bak
+    fi
+    
+    # 获取 Ubuntu 版本代号
+    UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null || echo "noble")
+    
+    # 使用阿里云镜像源
+    cat > /etc/apt/sources.list <<EOF
+deb http://${MIRROR_URL}/ubuntu/ ${UBUNTU_CODENAME} main restricted universe multiverse
+deb http://${MIRROR_URL}/ubuntu/ ${UBUNTU_CODENAME}-updates main restricted universe multiverse
+deb http://${MIRROR_URL}/ubuntu/ ${UBUNTU_CODENAME}-backports main restricted universe multiverse
+deb http://${MIRROR_URL}/ubuntu/ ${UBUNTU_CODENAME}-security main restricted universe multiverse
+EOF
+    
+    echo "源配置完成：使用阿里云镜像源 (Ubuntu)"
+elif [ -f /etc/apt/sources.list.d/debian.sources ]; then
     # Debian 12+ 使用 .sources 格式
     echo "检测到 Debian 12+，使用 .sources 格式配置源"
     cat > /etc/apt/sources.list.d/debian.sources <<EOF

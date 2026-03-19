@@ -1,7 +1,17 @@
-# 基础镜像：支持动态切换，可改为 debian:bullseye 或 debian:bookworm 或 node:22-slim
-# 测试时建议分别构建两次以验证兼容性
-ARG BASE_IMAGE=node:22-slim
+# 基础镜像：使用 Ubuntu 24 LTS
+ARG BASE_IMAGE=ubuntu:24.04
 FROM ${BASE_IMAGE}
+
+# 安装 NodeJS 24 LTS
+RUN echo "[LOG] 安装 NodeJS 24 LTS..." && \
+    apt-get update -y --allow-unauthenticated && \
+    apt-get install -y --no-install-recommends curl ca-certificates && \
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+    apt-get install -y nodejs && \
+    node --version && \
+    npm --version && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # 定义环境变量，方便后续修改镜像地址
 # 这里使用阿里云镜像，如需更换可在此处修改
@@ -47,6 +57,7 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     echo "[LOG] 包列表更新完成，开始安装依赖包..." && \
     apt-get install -y --no-install-recommends \
     git \
+    vim \
     sudo \
     python3 \
     python3-pip \
