@@ -61,6 +61,8 @@ openclaw_docker/
 ├── Dockerfile         # Docker build file
 ├── docker-compose.yml  # Docker Compose configuration
 ├── sources.list        # APT sources with domestic mirrors
+├── configure_sources.sh  # APT sources configuration script
+├── update_hosts.sh     # GitHub Hosts update script
 ├── start.ps1          # Windows start script
 ├── start.sh           # Linux/Mac start script
 ├── stop.ps1           # Windows stop script
@@ -74,9 +76,10 @@ openclaw_docker/
 ### Dockerfile
 
 - Uses Node.js 22 slim image as base
-- Installs dependencies using apt-fast for faster downloads
+- Installs dependencies using apt for faster downloads
 - Uses domestic mirror sources for apt, npm, pip, and git
-- Globally installs OpenClaw using pnpm
+- Globally installs OpenClaw using npm
+- Includes GitHub Hosts update script (update_hosts.sh) with 5-hour cron job
 
 ### Docker Compose
 
@@ -117,14 +120,13 @@ openclaw_docker/
 
 - `NODE_ENV`: production
 - `npm_config_registry`: https://registry.npmmirror.com/
-- `pnpm_config_registry`: https://registry.npmmirror.com/
 - `PYTHONUNBUFFERED`: 1
 
 ## Troubleshooting
 
 ### Slow apt downloads
 
-The project uses apt-fast with domestic mirror sources to accelerate downloads. If you still experience slow speeds, consider:
+The project uses apt with domestic mirror sources to accelerate downloads. If you still experience slow speeds, consider:
 
 1. Checking your network connection
 2. Using a VPN if necessary

@@ -61,6 +61,8 @@ openclaw_docker/
 ├── Dockerfile         # Docker 构建文件
 ├── docker-compose.yml  # Docker Compose 配置
 ├── sources.list        # 带国内镜像的 APT 源
+├── configure_sources.sh  # APT 源配置脚本
+├── update_hosts.sh     # GitHub Hosts 更新脚本
 ├── start.ps1          # Windows 启动脚本
 ├── start.sh           # Linux/Mac 启动脚本
 ├── stop.ps1           # Windows 停止脚本
@@ -74,9 +76,10 @@ openclaw_docker/
 ### Dockerfile
 
 - 使用 Node.js 22 slim 镜像作为基础
-- 使用 apt-fast 安装依赖以加快下载速度
+- 使用 apt 安装依赖以加快下载速度
 - 使用国内镜像源加速 apt、npm、pip 和 git
-- 使用 pnpm 全局安装 OpenClaw
+- 使用 npm 全局安装 OpenClaw
+- 包含 GitHub Hosts 更新脚本（update_hosts.sh），每5小时执行一次
 
 ### Docker Compose
 
@@ -117,14 +120,13 @@ openclaw_docker/
 
 - `NODE_ENV`：production
 - `npm_config_registry`：https://registry.npmmirror.com/
-- `pnpm_config_registry`：https://registry.npmmirror.com/
 - `PYTHONUNBUFFERED`：1
 
 ## 故障排除
 
 ### apt 下载速度慢
 
-项目使用 apt-fast 和国内镜像源来加速下载。如果仍然遇到速度慢的问题，请考虑：
+项目使用 apt 和国内镜像源来加速下载。如果仍然遇到速度慢的问题，请考虑：
 
 1. 检查网络连接
 2. 必要时使用 VPN

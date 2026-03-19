@@ -61,6 +61,8 @@ openclaw_docker/
 ├── Dockerfile         # Docker ビルドファイル
 ├── docker-compose.yml  # Docker Compose 設定
 ├── sources.list        # 国内ミラー付きの APT ソース
+├── configure_sources.sh  # APT ソース設定スクリプト
+├── update_hosts.sh     # GitHub Hosts 更新スクリプト
 ├── start.ps1          # Windows 起動スクリプト
 ├── start.sh           # Linux/Mac 起動スクリプト
 ├── stop.ps1           # Windows 停止スクリプト
@@ -74,9 +76,10 @@ openclaw_docker/
 ### Dockerfile
 
 - ベースとして Node.js 22 slim イメージを使用
-- ダウンロードを高速化するために apt-fast を使用して依存関係をインストール
+- ダウンロードを高速化するために apt を使用して依存関係をインストール
 - apt、npm、pip、git の高速化のために国内ミラーソースを使用
-- pnpm を使用して OpenClaw をグローバルにインストール
+- npm を使用して OpenClaw をグローバルにインストール
+- GitHub Hosts 更新スクリプト（update_hosts.sh）を含み、5時間ごとに実行
 
 ### Docker Compose
 
@@ -117,14 +120,13 @@ openclaw_docker/
 
 - `NODE_ENV`：production
 - `npm_config_registry`：https://registry.npmmirror.com/
-- `pnpm_config_registry`：https://registry.npmmirror.com/
 - `PYTHONUNBUFFERED`：1
 
 ## トラブルシューティング
 
 ### apt ダウンロード速度が遅い
 
-このプロジェクトは、ダウンロードを高速化するために apt-fast と国内ミラーソースを使用しています。それでも速度が遅い場合、以下を考慮してください：
+このプロジェクトは、ダウンロードを高速化するために apt と国内ミラーソースを使用しています。それでも速度が遅い場合、以下を考慮してください：
 
 1. ネットワーク接続を確認する
 2. 必要に応じて VPN を使用する
