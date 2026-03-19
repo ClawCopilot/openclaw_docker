@@ -48,9 +48,12 @@ ENV pip_cache_dir=/root/.cache/pip
 RUN apt-get update -y --allow-unauthenticated && \
     apt-get install -y --no-install-recommends --fix-missing --fix-broken \
     git \
+    vim \
+    sudo \
     python3 \
     python3-pip \
     curl \
+    wget \
     ca-certificates \
     build-essential \
     cron \
@@ -77,6 +80,19 @@ RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
 
 # 配置 wget 镜像源
 RUN echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc
+
+# 安装 brew（使用国内镜像源）
+RUN echo -e "Y\n2\n5" | /bin/bash -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)" && \
+    # 配置 brew 环境变量
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /root/.bashrc && \
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
+    # 配置 brew 国内镜像源
+    brew tap --custom-remote --force-auto-update homebrew/core https://mirrors.ustc.edu.cn/homebrew-core.git && \
+    brew tap --custom-remote --force-auto-update homebrew/cask https://mirrors.ustc.edu.cn/homebrew-cask.git && \
+    brew tap --custom-remote --force-auto-update homebrew/cask-versions https://mirrors.ustc.edu.cn/homebrew-cask-versions.git && \
+    # 设置 brew 镜像源环境变量
+    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
+    export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
 
 # 直接使用 npm 全局安装 OpenClaw
 RUN npm install -g openclaw@latest
