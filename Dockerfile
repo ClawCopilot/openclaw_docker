@@ -1,5 +1,24 @@
-# 使用官方 Node.js 22 镜像作为基础
-FROM node:22-slim
+# 基础镜像：支持动态切换，可改为 debian:bullseye 或 debian:bookworm 或 node:22-slim
+# 测试时建议分别构建两次以验证兼容性
+ARG BASE_IMAGE=node:22-slim
+FROM ${BASE_IMAGE}
+
+# 定义环境变量，方便后续修改镜像地址
+# 这里使用阿里云镜像，如需更换可在此处修改
+ARG MIRROR_URL="mirrors.aliyun.com"
+ARG DEBIAN_VERSION_CODENAME=""
+
+# ---------------------------------------------------------
+# 步骤 1: 智能判断版本并替换源 (核心逻辑)
+# ---------------------------------------------------------
+# 使用外部脚本配置源，提高可读性和可维护性
+# ---------------------------------------------------------
+COPY configure_sources.sh /tmp/configure_sources.sh
+RUN chmod +x /tmp/configure_sources.sh && \
+    /tmp/configure_sources.sh ${MIRROR_URL} && \
+    rm /tmp/configure_sources.sh
+
+
 
 # 设置环境变量
 ENV DEBIAN_FRONTEND=noninteractive
@@ -8,8 +27,8 @@ ENV npm_config_registry=https://registry.npmmirror.com/
 ENV pnpm_config_registry=https://registry.npmmirror.com/
 ENV PYTHONUNBUFFERED=1
 
-# 替换 sources.list 文件，添加多个国内镜像源
-COPY sources.list /etc/apt/sources.list
+
+
 
 # 复制 npm 和 git 配置文件
 COPY .npmrc /root/.npmrc
@@ -37,17 +56,12 @@ ENV pip_cache_dir=/root/.cache/pip
 COPY update_hosts.sh /root/update_hosts.sh
 RUN chmod +x /root/update_hosts.sh
 
+# 修改脚本以适应 Debian 系统
+RUN sed -i 's/sudo //g' /root/update_hosts.sh && \
+    sed -i 's/dscacheutil -flushcache && killall -HUP mDNSResponder/echo "DNS cache flushed"/g' /root/update_hosts.sh
+
 # 首次执行脚本
 RUN /root/update_hosts.sh
-
-# 安装 cron 并设置定时任务（每5小时执行一次）
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends cron && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
-    chmod 644 /etc/cron.d/update_hosts && \
-    crontab /etc/cron.d/update_hosts
 
 # 安装构建阶段依赖（包含编译工具）
 RUN apt-get update -y && \
@@ -59,8 +73,14 @@ RUN apt-get update -y && \
     curl \
     ca-certificates \
     build-essential \
+    cron \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# 设置定时任务（每5小时执行一次）
+RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
+    chmod 644 /etc/cron.d/update_hosts && \
+    crontab /etc/cron.d/update_hosts
 
 # 配置 wget 镜像源
 RUN echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc
