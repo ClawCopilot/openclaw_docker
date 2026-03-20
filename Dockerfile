@@ -5,16 +5,18 @@ FROM ${BASE_IMAGE}
 
 # 切换到 root 用户执行需要权限的操作
 USER root
+RUN echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER node
 
 # 安装 NodeJS 24 LTS
 RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
     command -v node > /dev/null 2>&1 && echo "[LOG] NodeJS 已安装，跳过安装步骤" || ( \
         echo "[LOG] NodeJS 未安装，开始安装 NodeJS 24 LTS..." && \
-        apt-get update -y --allow-unauthenticated && \
-        apt-get install -y --no-install-recommends curl ca-certificates && \
+        sudo apt-get update -y --allow-unauthenticated && \
+        sudo apt-get install -y --no-install-recommends curl ca-certificates && \
         curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
-        apt-get install -y nodejs && \
-        apt-get clean && \
+        sudo apt-get install -y nodejs && \
+        sudo apt-get clean && \
         rm -rf /var/lib/apt/lists/* && \
         echo "[LOG] NodeJS 安装完成" \
     ) && \
@@ -43,21 +45,21 @@ ENV PYTHONUNBUFFERED=1
 
 
 # 复制 npm 和 git 配置文件
-COPY .npmrc /root/.npmrc
-COPY .gitconfig /root/.gitconfig
+COPY .npmrc ~/.npmrc
+COPY .gitconfig ~/.gitconfig
 
 # 配置 Python pip 国内镜像源
-RUN mkdir -p /root/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > /root/.config/pip/pip.conf
+RUN mkdir -p ~/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > ~/.config/pip/pip.conf
 
 # 配置缓存相关环境变量
-ENV npm_config_cache=/root/.npm
-ENV pip_cache_dir=/root/.cache/pip
+ENV npm_config_cache=~/.npm
+ENV pip_cache_dir=~/.cache/pip
 
 # 安装构建阶段依赖（包含编译工具）
 RUN echo "[LOG] 开始安装构建阶段依赖..." && \
-    apt-get update -y --allow-unauthenticated && \
+    sudo apt-get update -y --allow-unauthenticated && \
     echo "[LOG] 包列表更新完成，开始安装依赖包..." && \
-    apt-get install -y --no-install-recommends \
+    sudo apt-get install -y --no-install-recommends \
     git \
     vim \
     sudo \
@@ -71,7 +73,7 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     # 给node用户添加sudo权限
     echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
     echo "[LOG] 依赖包安装完成，开始清理..." && \
-    apt-get clean && \
+    sudo apt-get clean && \
     echo "[LOG] 清理完成"
 
 # 配置 wget 镜像源
@@ -81,14 +83,14 @@ RUN echo "[LOG] 配置 wget 镜像源..." && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # 复制 GitHub Hosts 更新脚本到用户目录
-COPY update_hosts.sh /root/update_hosts.sh
-RUN chmod +x /root/update_hosts.sh
+COPY update_hosts.sh ~/update_hosts.sh
+RUN chmod +x ~/update_hosts.sh
 
 # 首次执行脚本
-RUN /root/update_hosts.sh
+RUN ~/update_hosts.sh
 
 # 设置定时任务（每5小时执行一次）
-RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
+RUN echo "0 */5 * * * ~/update_hosts.sh" > /etc/cron.d/update_hosts && \
     chmod 644 /etc/cron.d/update_hosts && \
     crontab /etc/cron.d/update_hosts
 
@@ -109,8 +111,8 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
     command -v brew > /dev/null 2>&1 && echo "[LOG] brew 已安装，跳过安装步骤..." || ( \
         echo "[LOG] brew 未安装，开始安装 brew..." && \
         # 安装必要的依赖
-        apt-get update -y --allow-unauthenticated && \
-        apt-get install -y --no-install-recommends build-essential curl git && \
+        sudo apt-get update -y --allow-unauthenticated && \
+        sudo apt-get install -y --no-install-recommends build-essential curl git && \
         # 创建非 root 用户
         useradd -m -s /bin/bash brewuser && \
         # 给 brewuser 添加 sudo 权限
@@ -147,8 +149,8 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
     export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
     export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
     # 为 root 用户配置 brew 环境变量
-    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> /root/.bashrc && \
-    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
+    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
+    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
     echo "[LOG] brew 镜像源配置完成..."
 
 
