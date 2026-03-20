@@ -1,17 +1,18 @@
 # 基础镜像：使用 Ubuntu 24 LTS
-ARG BASE_IMAGE=ubuntu:24.04
+# ARG BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
+ARG BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
 FROM ${BASE_IMAGE}
 
-# 安装 NodeJS 24 LTS
-RUN echo "[LOG] 安装 NodeJS 24 LTS..." && \
-    apt-get update -y --allow-unauthenticated && \
-    apt-get install -y --no-install-recommends curl ca-certificates && \
-    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
-    apt-get install -y nodejs && \
-    node --version && \
-    npm --version && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# # 安装 NodeJS 24 LTS
+# RUN echo "[LOG] 安装 NodeJS 24 LTS..." && \
+#     apt-get update -y --allow-unauthenticated && \
+#     apt-get install -y --no-install-recommends curl ca-certificates && \
+#     curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+#     apt-get install -y nodejs && \
+#     node --version && \
+#     npm --version && \
+#     apt-get clean && \
+#     rm -rf /var/lib/apt/lists/*
 
 # 定义环境变量，方便后续修改镜像地址
 # 这里使用阿里云镜像，如需更换可在此处修改
@@ -29,15 +30,10 @@ RUN chmod +x /tmp/configure_sources.sh && \
     rm /tmp/configure_sources.sh
 
 
-
 # 设置环境变量
-ENV DEBIAN_FRONTEND=noninteractive
-ENV NODE_ENV=production
 ENV npm_config_registry=https://registry.npmmirror.com/
 ENV pnpm_config_registry=https://registry.npmmirror.com/
 ENV PYTHONUNBUFFERED=1
-
-
 
 
 # 复制 npm 和 git 配置文件
@@ -132,14 +128,14 @@ RUN echo "[LOG] 开始安装 brew..." && \
     echo "[LOG] brew 安装完成..."
 
 # 直接使用 npm 全局安装 OpenClaw
-RUN npm install -g openclaw@latest
+# RUN npm install -g openclaw@latest
 
 # 暴露端口
-EXPOSE 18798
+# EXPOSE 18798
 
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:18798/health || exit 1
+# # 健康检查
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD curl -f http://localhost:18798/health || exit 1
 
-# 启动命令（同时启动 cron 服务和 OpenClaw 网关，允许未配置）
-CMD service cron start && openclaw gateway --allow-unconfigured
+# # 启动命令（同时启动 cron 服务和 OpenClaw 网关，允许未配置）
+# CMD service cron start && openclaw gateway --allow-unconfigured

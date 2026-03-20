@@ -6,14 +6,22 @@ services:
     ports:
       - "42700:18798"
     volumes:
-      - ./serv:/app/data
+      - ./serv/.openclaw:/root/.openclaw          # Config and data
+      - ./serv/workspace:/root/workspace          # Agent workspace
     environment:
       - GATEWAY_ID=serv
       - PORT=18798
       - NODE_ENV=production
       - npm_config_registry=https://registry.npmmirror.com/
       - pnpm_config_registry=https://registry.npmmirror.com/
+      - TZ=Asia/Shanghai     # Set your timezone
     restart: unless-stopped
+    mem_limit: 2g            # Prevent runaway memory usage
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"    
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
       interval: 30s
@@ -27,14 +35,22 @@ services:
     build: .
     container_name: coder1
     volumes:
-      - ./coder1:/app/data
+      - ./coder1/.openclaw:/root/.openclaw          # Config and data
+      - ./coder1/workspace:/root/workspace          # Agent workspace      
     environment:
       - GATEWAY_ID=coder1
       - PORT=18798
       - NODE_ENV=production
       - npm_config_registry=https://registry.npmmirror.com/
       - pnpm_config_registry=https://registry.npmmirror.com/
+      - TZ=Asia/Shanghai     # Set your timezone
     restart: unless-stopped
+    mem_limit: 2g            # Prevent runaway memory usage
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"  
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
       interval: 30s
@@ -48,14 +64,22 @@ services:
     build: .
     container_name: coder2
     volumes:
-      - ./coder2:/app/data
+      - ./coder2/.openclaw:/root/.openclaw          # Config and data
+      - ./coder2/workspace:/root/workspace          # Agent workspace   
     environment:
       - GATEWAY_ID=coder2
       - PORT=18798
       - NODE_ENV=production
       - npm_config_registry=https://registry.npmmirror.com/
       - pnpm_config_registry=https://registry.npmmirror.com/
+      - TZ=Asia/Shanghai     # Set your timezone
     restart: unless-stopped
+    mem_limit: 2g            # Prevent runaway memory usage
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"  
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
       interval: 30s
