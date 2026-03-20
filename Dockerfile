@@ -122,9 +122,9 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
         # 切换到 brewuser 安装 brew
         su - brewuser -c " \
             echo '[LOG] 从国内镜像源克隆 Homebrew 仓库...' && \
-            git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
+            git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
             echo '[LOG] 从国内镜像源克隆 Homebrew Core 仓库...' && \
-            git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
+            git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
             echo '[LOG] 创建 bin 目录...' && \
             mkdir -p /home/linuxbrew/.linuxbrew/bin && \
             echo '[LOG] 创建 brew 符号链接...' && \
