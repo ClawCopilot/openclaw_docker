@@ -64,8 +64,8 @@ services:
     build: .
     container_name: coder2
     volumes:
-      - ./coder2/.openclaw:/root/.openclaw          # Config and data
-      - ./coder2/workspace:/root/workspace          # Agent workspace   
+      - ./coder2/.openclaw:~/.openclaw          # Config and data
+      - ./coder2/workspace:~/workspace          # Agent workspace   
     environment:
       - GATEWAY_ID=coder2
       - PORT=18798
