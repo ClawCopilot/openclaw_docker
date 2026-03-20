@@ -68,6 +68,8 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     ca-certificates \
     build-essential \
     cron && \
+    # 给node用户添加sudo权限
+    echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
     echo "[LOG] 依赖包安装完成，开始清理..." && \
     apt-get clean && \
     echo "[LOG] 清理完成"
@@ -148,3 +150,7 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
     echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> /root/.bashrc && \
     echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
     echo "[LOG] brew 镜像源配置完成..."
+
+
+# 切换到node用户
+USER node    
