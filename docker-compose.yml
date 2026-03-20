@@ -6,8 +6,8 @@ services:
     ports:
       - "42700:18798"
     volumes:
-      - ./serv/.openclaw:/root/.openclaw          # Config and data
-      - ./serv/workspace:/root/workspace          # Agent workspace
+      - ./serv/.openclaw:~/.openclaw          # Config and data
+      - ./serv/workspace:~/workspace          # Agent workspace
     environment:
       - GATEWAY_ID=serv
       - PORT=18798
@@ -35,8 +35,8 @@ services:
     build: .
     container_name: coder1
     volumes:
-      - ./coder1/.openclaw:/root/.openclaw          # Config and data
-      - ./coder1/workspace:/root/workspace          # Agent workspace      
+      - ./coder1/.openclaw:~/.openclaw          # Config and data
+      - ./coder1/workspace:~/workspace          # Agent workspace      
     environment:
       - GATEWAY_ID=coder1
       - PORT=18798
