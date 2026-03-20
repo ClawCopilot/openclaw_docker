@@ -15,5 +15,11 @@ echo "Serv: http://localhost:42700"
 echo "Coder1: No external port mapping"
 echo "Coder2: No external port mapping"
 echo ""
+echo "Waiting 15 seconds for containers to start..."
+sleep 15
+
 echo "Check container status: docker-compose ps"
+docker-compose ps
+
 echo "Check container logs: docker-compose logs -f"
+docker-compose logs -f

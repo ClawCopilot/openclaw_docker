@@ -14,5 +14,9 @@ Write-Host "Serv: http://localhost:42700"
 Write-Host "Coder1: No external port mapping"
 Write-Host "Coder2: No external port mapping"
 Write-Host ""
+Write-Host "Waiting 15 seconds for containers to start..."
+Start-Sleep -Seconds 15
 Write-Host "Check container status: docker-compose ps"
+docker-compose ps
 Write-Host "Check container logs: docker-compose logs -f"
+docker-compose logs -f
