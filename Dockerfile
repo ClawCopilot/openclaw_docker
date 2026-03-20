@@ -3,16 +3,23 @@
 ARG BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
 FROM ${BASE_IMAGE}
 
-# # 安装 NodeJS 24 LTS
-# RUN echo "[LOG] 安装 NodeJS 24 LTS..." && \
-#     apt-get update -y --allow-unauthenticated && \
-#     apt-get install -y --no-install-recommends curl ca-certificates && \
-#     curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
-#     apt-get install -y nodejs && \
-#     node --version && \
-#     npm --version && \
-#     apt-get clean && \
-#     rm -rf /var/lib/apt/lists/*
+# 切换到 root 用户执行需要权限的操作
+USER root
+
+# 安装 NodeJS 24 LTS
+RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
+    command -v node > /dev/null 2>&1 && echo "[LOG] NodeJS 已安装，跳过安装步骤" || ( \
+        echo "[LOG] NodeJS 未安装，开始安装 NodeJS 24 LTS..." && \
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends curl ca-certificates && \
+        curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+        apt-get install -y nodejs && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/* && \
+        echo "[LOG] NodeJS 安装完成" \
+    ) && \
+    node --version && \
+    npm --version
 
 # 定义环境变量，方便后续修改镜像地址
 # 这里使用阿里云镜像，如需更换可在此处修改
@@ -24,11 +31,10 @@ ARG DEBIAN_VERSION_CODENAME=""
 # ---------------------------------------------------------
 # 使用外部脚本配置源，提高可读性和可维护性
 # ---------------------------------------------------------
+# 复制并执行源配置脚本
 COPY configure_sources.sh /tmp/configure_sources.sh
-RUN chmod +x /tmp/configure_sources.sh && \
-    /tmp/configure_sources.sh ${MIRROR_URL} && \
+RUN bash /tmp/configure_sources.sh ${MIRROR_URL} && \
     rm /tmp/configure_sources.sh
-
 
 # 设置环境变量
 ENV npm_config_registry=https://registry.npmmirror.com/
@@ -88,54 +94,57 @@ RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
 RUN echo "[LOG] 清理临时文件..." && \
     rm -rf /tmp/* /var/tmp/*
 
+# 直接使用 npm 全局安装 OpenClaw
+RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
+    command -v openclaw > /dev/null 2>&1 && echo "[LOG] OpenClaw 已安装，跳过安装步骤..." || ( \
+        echo "[LOG] OpenClaw 未安装，开始安装 OpenClaw..." && \
+        npm install -g openclaw@latest && \
+        echo "[LOG] OpenClaw 安装完成..." \
+    )
+
 # 安装 brew（使用国内镜像源）
-RUN echo "[LOG] 开始安装 brew..." && \
-    # 安装必要的依赖
-    apt-get update -y --allow-unauthenticated && \
-    apt-get install -y --no-install-recommends build-essential curl git && \
-    # 创建非 root 用户
-    useradd -m -s /bin/bash brewuser && \
-    # 给 brewuser 添加 sudo 权限
-    echo 'brewuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    # 创建 brew 安装目录并设置权限
-    echo "[LOG] 创建 brew 安装目录..." && \
-    mkdir -p /home/linuxbrew/.linuxbrew && \
-    chown -R brewuser:brewuser /home/linuxbrew && \
-    # 切换到 brewuser 安装 brew
-    su - brewuser -c " \
-        echo '[LOG] 从国内镜像源克隆 Homebrew 仓库...' && \
-        git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
-        echo '[LOG] 从国内镜像源克隆 Homebrew Core 仓库...' && \
-        git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
-        echo '[LOG] 创建 bin 目录...' && \
-        mkdir -p /home/linuxbrew/.linuxbrew/bin && \
-        echo '[LOG] 创建 brew 符号链接...' && \
-        ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
-        echo '[LOG] 配置 brew 环境变量...' && \
-        echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
-        echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
-        export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
-        export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
-        echo '[LOG] 测试 brew 安装...' && \
-        brew --version \
-    " && \
-    # 为 root 用户配置 brew 环境变量
-    echo "[LOG] 为 root 用户配置 brew 环境变量..." && \
-    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> /root/.bashrc && \
-    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
+RUN echo "[LOG] 检查 brew 是否已安装..." && \
+    command -v brew > /dev/null 2>&1 && echo "[LOG] brew 已安装，跳过安装步骤..." || ( \
+        echo "[LOG] brew 未安装，开始安装 brew..." && \
+        # 安装必要的依赖
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends build-essential curl git && \
+        # 创建非 root 用户
+        useradd -m -s /bin/bash brewuser && \
+        # 给 brewuser 添加 sudo 权限
+        echo 'brewuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+        # 创建 brew 安装目录并设置权限
+        echo "[LOG] 创建 brew 安装目录..." && \
+        mkdir -p /home/linuxbrew/.linuxbrew && \
+        chown -R brewuser:brewuser /home/linuxbrew && \
+        # 切换到 brewuser 安装 brew
+        su - brewuser -c " \
+            echo '[LOG] 从国内镜像源克隆 Homebrew 仓库...' && \
+            git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
+            echo '[LOG] 从国内镜像源克隆 Homebrew Core 仓库...' && \
+            git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
+            echo '[LOG] 创建 bin 目录...' && \
+            mkdir -p /home/linuxbrew/.linuxbrew/bin && \
+            echo '[LOG] 创建 brew 符号链接...' && \
+            ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
+            echo '[LOG] 配置 brew 环境变量...' && \
+            echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
+            echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
+            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
+            export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
+            echo '[LOG] 测试 brew 安装...' && \
+            brew --version \
+        " && \
+        echo "[LOG] brew 安装完成..." \
+    ) && \
+    # 配置 brew 镜像源（无论是否新安装）
+    echo "[LOG] 配置 brew 镜像源..." && \
+    # 为当前用户配置 brew 环境变量
+    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
+    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
     export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
     export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
-    echo "[LOG] brew 安装完成..."
-
-# 直接使用 npm 全局安装 OpenClaw
-# RUN npm install -g openclaw@latest
-
-# 暴露端口
-# EXPOSE 18798
-
-# # 健康检查
-# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-#     CMD curl -f http://localhost:18798/health || exit 1
-
-# # 启动命令（同时启动 cron 服务和 OpenClaw 网关，允许未配置）
-# CMD service cron start && openclaw gateway --allow-unconfigured
+    # 为 root 用户配置 brew 环境变量
+    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> /root/.bashrc && \
+    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
+    echo "[LOG] brew 镜像源配置完成..."
