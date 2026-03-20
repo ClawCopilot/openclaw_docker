@@ -92,40 +92,44 @@ RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
 RUN echo "[LOG] 清理临时文件..." && \
     rm -rf /tmp/* /var/tmp/*
 
-# 安装 brew（使用国内镜像源）- 暂时注释掉不执行
-# RUN echo "[LOG] 开始安装 brew..." && \
-#     # 创建非 root 用户
-#     useradd -m -s /bin/bash brewuser && \
-#     # 给 brewuser 添加 sudo 权限
-#     echo 'brewuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-#     # 创建 brew 安装目录并设置权限
-#     echo "[LOG] 创建 brew 安装目录..." && \
-#     mkdir -p /home/linuxbrew/.linuxbrew && \
-#     chown -R brewuser:brewuser /home/linuxbrew && \
-#     # 切换到 brewuser 安装 brew
-#     su - brewuser -c " \
-#         echo '[LOG] 从国内镜像源克隆 Homebrew 仓库...' && \
-#         git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
-#         echo '[LOG] 从国内镜像源克隆 Homebrew Core 仓库...' && \
-#         git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
-#         echo '[LOG] 创建 brew 符号链接...' && \
-#         ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
-#         echo '[LOG] 配置 brew 环境变量...' && \
-#         echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
-#         echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
-#         export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
-#         export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
-#         echo '[LOG] 配置 brew 国内镜像源...' && \
-#         brew tap --custom-remote --force-auto-update homebrew/cask https://mirrors.ustc.edu.cn/homebrew-cask.git && \
-#         brew tap --custom-remote --force-auto-update homebrew/cask-versions https://mirrors.ustc.edu.cn/homebrew-cask-versions.git \
-#     " && \
-#     # 为 root 用户配置 brew 环境变量
-#     echo "[LOG] 为 root 用户配置 brew 环境变量..." && \
-#     echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> /root/.bashrc && \
-#     echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
-#     export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
-#     export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
-#     echo "[LOG] brew 安装完成..."
+# 安装 brew（使用国内镜像源）
+RUN echo "[LOG] 开始安装 brew..." && \
+    # 安装必要的依赖
+    apt-get update -y --allow-unauthenticated && \
+    apt-get install -y --no-install-recommends build-essential curl git && \
+    # 创建非 root 用户
+    useradd -m -s /bin/bash brewuser && \
+    # 给 brewuser 添加 sudo 权限
+    echo 'brewuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    # 创建 brew 安装目录并设置权限
+    echo "[LOG] 创建 brew 安装目录..." && \
+    mkdir -p /home/linuxbrew/.linuxbrew && \
+    chown -R brewuser:brewuser /home/linuxbrew && \
+    # 切换到 brewuser 安装 brew
+    su - brewuser -c " \
+        echo '[LOG] 从国内镜像源克隆 Homebrew 仓库...' && \
+        git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
+        echo '[LOG] 从国内镜像源克隆 Homebrew Core 仓库...' && \
+        git clone https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
+        echo '[LOG] 创建 bin 目录...' && \
+        mkdir -p /home/linuxbrew/.linuxbrew/bin && \
+        echo '[LOG] 创建 brew 符号链接...' && \
+        ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
+        echo '[LOG] 配置 brew 环境变量...' && \
+        echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
+        echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
+        export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
+        export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
+        echo '[LOG] 测试 brew 安装...' && \
+        brew --version \
+    " && \
+    # 为 root 用户配置 brew 环境变量
+    echo "[LOG] 为 root 用户配置 brew 环境变量..." && \
+    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> /root/.bashrc && \
+    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> /root/.bashrc && \
+    export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
+    export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
+    echo "[LOG] brew 安装完成..."
 
 # 直接使用 npm 全局安装 OpenClaw
 RUN npm install -g openclaw@latest
