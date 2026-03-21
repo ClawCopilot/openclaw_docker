@@ -10,10 +10,11 @@ foreach ($gateway in $gateways) {
 docker-compose up -d --build
 
 # Show deployment info
+$servPort = if (Test-Path ".env") { (Get-Content ".env" | Where-Object { $_ -match "^SERV_PORT=" } | ForEach-Object { $_.Split("=")[1] }) } else { "42700" }
 Write-Host "OpenClaw multi-gateway deployment completed!"
 Write-Host ""
 Write-Host "Access addresses:"
-Write-Host "Serv: http://localhost:42700"
+Write-Host "Serv: http://localhost:$servPort"
 Write-Host "Coder1: No external port mapping"
 Write-Host "Coder2: No external port mapping"
 Write-Host "Coder3: No external port mapping"

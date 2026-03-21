@@ -1,39 +1,48 @@
+# 公共配置锚点
+x-base-service:
+  &base-service
+  build: .
+  environment:
+    - PORT=${OPENCLAW_PORT:-18798}
+    - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
+    - npm_config_registry=${npm_config_registry:-https://registry.npmmirror.com/}
+    - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}
+    - TZ=${TZ:-Asia/Shanghai}
+  restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}
+  mem_limit: ${CONTAINER_MEM_LIMIT:-2g}
+  logging:
+    driver: json-file
+    options:
+      max-size: "${LOG_MAX_SIZE:-10m}"
+      max-file: "${LOG_MAX_FILE:-3}"
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:${OPENCLAW_PORT:-18798}/health"]
+    interval: ${HEALTHCHECK_INTERVAL:-30s}
+    timeout: ${HEALTHCHECK_TIMEOUT:-10s}
+    start_period: ${HEALTHCHECK_START_PERIOD:-5s}
+    retries: ${HEALTHCHECK_RETRIES:-3}
+  privileged: true
+  network_mode: ${NETWORK_MODE:-bridge}
+
+# 服务配置
 services:
   # 网关 1 - serv
   serv:
-    build: .
+    <<: *base-service
     container_name: serv
     ports:
-      - "42700:18798"
+      - "${SERV_PORT:-42700}:${OPENCLAW_PORT:-18798}"
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./serv/apps:/home/node/apps:U,z       
     environment:
       - GATEWAY_ID=serv
-      - PORT=18798
-      - NODE_ENV=production
-      - npm_config_registry=https://registry.npmmirror.com/
-      - pnpm_config_registry=https://registry.npmmirror.com/
-      - TZ=Asia/Shanghai     # Set your timezone
-    restart: unless-stopped
-    mem_limit: 2g            # Prevent runaway memory usage
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"    
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
-      interval: 30s
-      timeout: 10s
-      start_period: 5s
-      retries: 3
-    privileged: true
+      - SERV_PORT=${SERV_PORT:-42700}
 
   # 网关 2 - Coder1
   coder1:
-    build: .
+    <<: *base-service
     container_name: coder1
     volumes:
       - ./coder1/.openclaw:/home/node/.openclaw:U,z          # Config and data
@@ -41,29 +50,10 @@ services:
       - ./coder1/apps:/home/node/apps:U,z                  # Config apps
     environment:
       - GATEWAY_ID=coder1
-      - PORT=18798
-      - NODE_ENV=production
-      - npm_config_registry=https://registry.npmmirror.com/
-      - pnpm_config_registry=https://registry.npmmirror.com/
-      - TZ=Asia/Shanghai     # Set your timezone
-    restart: unless-stopped
-    mem_limit: 2g            # Prevent runaway memory usage
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"  
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
-      interval: 30s
-      timeout: 10s
-      start_period: 5s
-      retries: 3
-    privileged: true
 
   # 网关 3 - Coder2
   coder2:
-    build: .
+    <<: *base-service
     container_name: coder2
     volumes:
       - ./coder2/.openclaw:/home/node/.openclaw:U,z        # Config and data
@@ -71,51 +61,14 @@ services:
       - ./coder2/apps:/home/node/apps:U,z                  # Config apps      
     environment:
       - GATEWAY_ID=coder2
-      - PORT=18798
-      - NODE_ENV=production
-      - npm_config_registry=https://registry.npmmirror.com/
-      - pnpm_config_registry=https://registry.npmmirror.com/
-      - TZ=Asia/Shanghai     # Set your timezone
-    restart: unless-stopped
-    mem_limit: 2g            # Prevent runaway memory usage
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"  
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
-      interval: 30s
-      timeout: 10s
-      start_period: 5s
-      retries: 3
-    privileged: true
+
   # 网关 4 - Coder3
   coder3:
-    build: .
+    <<: *base-service
     container_name: coder3
     volumes:
       - ./coder3/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./coder3/workspace:/home/node/workspace:U,z        # Agent workspace   
       - ./coder3/apps:/home/node/apps:U,z                  # Config apps      
     environment:
-      - GATEWAY_ID=coder3
-      - PORT=18798
-      - NODE_ENV=production
-      - npm_config_registry=https://registry.npmmirror.com/
-      - pnpm_config_registry=https://registry.npmmirror.com/
-      - TZ=Asia/Shanghai     # Set your timezone
-    restart: unless-stopped
-    mem_limit: 2g            # Prevent runaway memory usage
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"  
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
-      interval: 30s
-      timeout: 10s
-      start_period: 5s
-      retries: 3
-    privileged: true    
+      - GATEWAY_ID=coder3    
