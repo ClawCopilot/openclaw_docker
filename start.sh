@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # Create gateway directories
-mkdir -p serv/.openclaw coder1/.openclaw coder2/.openclaw
-mkdir -p serv/workspace coder1/workspace coder2/workspace
+# Create gateway directories
+gateways=("serv" "coder1" "coder2" "coder3")
+for gateway in "${gateways[@]}"; do
+    mkdir -p "$gateway/.openclaw" "$gateway/workspace" "$gateway/apps"
+done
 
 # Build and start Docker containers
 docker-compose up -d --build
