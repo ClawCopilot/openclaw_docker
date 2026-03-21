@@ -3,7 +3,7 @@ x-base-service:
   &base-service
   build: .
   environment:
-    - PORT=${OPENCLAW_PORT:-18798}
+    - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
     - npm_config_registry=${npm_config_registry:-https://registry.npmmirror.com/}
     - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}
@@ -31,7 +31,7 @@ services:
     <<: *base-service
     container_name: serv
     ports:
-      - "${SERV_PORT:-42700}:${OPENCLAW_PORT:-18798}"
+      - "${SERV_PORT:-42700}:18789"
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace
