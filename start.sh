@@ -4,7 +4,7 @@
 # Create gateway directories
 gateways=("serv" "coder1" "coder2" "coder3")
 for gateway in "${gateways[@]}"; do
-    mkdir -p "$gateway/.openclaw" "$gateway/workspace" "$gateway/apps"
+    mkdir -p "$gateway/.openclaw/" "$gateway/workspace/" "$gateway/apps/"
 done
 
 # Build and start Docker containers
@@ -18,8 +18,8 @@ echo "Serv: http://localhost:42700"
 echo "Coder1: No external port mapping"
 echo "Coder2: No external port mapping"
 echo ""
-echo "Waiting 15 seconds for containers to start..."
-sleep 15
+echo "Waiting 5 seconds for containers to start..."
+sleep 5
 
 echo "Check container status: docker-compose ps"
 docker-compose ps
