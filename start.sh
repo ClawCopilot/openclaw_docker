@@ -3,8 +3,12 @@
 # Create gateway directories
 # Create gateway directories
 gateways=("serv" "coder1" "coder2" "coder3")
+dirs=(".openclaw" "workspace" "apps")
 for gateway in "${gateways[@]}"; do
-    mkdir -p "$gateway/.openclaw/" "$gateway/workspace/" "$gateway/apps/"
+    for dir in "${dirs[@]}"; do
+        mkdir -p "$gateway/$dir"
+        chown -R 1000:1000 "$gateway/$dir"
+    done
 done
 
 # Build and start Docker containers
