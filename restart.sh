@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义支持的容器名称
-valid_containers=("serv" "coder1" "coder2")
+valid_containers=("serv" "coder1" "coder2" "coder3")
 
 # 检查参数
 if [ $# -eq 0 ]; then
@@ -11,7 +11,7 @@ elif [ $# -eq 1 ]; then
 else
     echo "Error: Too many arguments"
     echo "Usage: $0 [container_name]"
-    echo "Valid container names: all, serv, coder1, coder2"
+    echo "Valid container names: all, serv, coder1, coder2, coder3"
     exit 1
 fi
 
@@ -26,7 +26,7 @@ if [ "$container_name" != "all" ]; then
     done
     if [ "$valid" == "false" ]; then
         echo "Error: Invalid container name"
-        echo "Valid container names: all, serv, coder1, coder2"
+        echo "Valid container names: all, serv, coder1, coder2, coder3"
         exit 1
     fi
 fi

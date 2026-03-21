@@ -3,11 +3,11 @@ param(
 )
 
 # 定义支持的容器名称
-$ValidContainers = @("serv", "coder1", "coder2")
+$ValidContainers = @("serv", "coder1", "coder2", "coder3")
 
 # 检查容器名称是否有效
 if ($ContainerName -ne "all" -and $ValidContainers -notcontains $ContainerName) {
-    Write-Host "Error: Invalid container name. Valid containers are: all, serv, coder1, coder2"
+    Write-Host "Error: Invalid container name. Valid containers are: all, serv, coder1, coder2, coder3"
     exit 1
 }
 
