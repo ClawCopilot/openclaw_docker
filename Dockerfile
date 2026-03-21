@@ -74,6 +74,11 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
 USER node    
 
 
+# 修复目录权限
+RUN mkdir -p "$HOME/.openclaw" "$HOME/workspace" "$HOME/apps" && \
+    chown -R 1000:1000 "$HOME/.openclaw" "$HOME/workspace" "$HOME/apps"
+
+
 # 安装 NodeJS 24 LTS
 RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
     command -v node > /dev/null 2>&1 && echo "[LOG] NodeJS 已安装，跳过安装步骤" || ( \
@@ -97,30 +102,30 @@ ENV PYTHONUNBUFFERED=1
 
 # 复制 npm 配置文件（如果存在则追加，不存在则复制）
 COPY .npmrc /tmp/.npmrc
-RUN if [ -f "~/.npmrc" ]; then \
+RUN if [ -f "$HOME/.npmrc" ]; then \
         echo "[LOG] .npmrc 文件已存在，追加内容..." && \
-        cat /tmp/.npmrc >> ~/.npmrc; \
+        cat /tmp/.npmrc >> $HOME/.npmrc; \
     else \
         echo "[LOG] .npmrc 文件不存在，直接复制..." && \
-        cp /tmp/.npmrc ~/.npmrc; \
+        cp /tmp/.npmrc $HOME/.npmrc; \
     fi
 
 # 复制 git 配置文件（如果存在则追加，不存在则复制）
 COPY .gitconfig /tmp/.gitconfig
-RUN if [ -f "~/.gitconfig" ]; then \
+RUN if [ -f "$HOME/.gitconfig" ]; then \
         echo "[LOG] .gitconfig 文件已存在，追加内容..." && \
-        cat /tmp/.gitconfig >> ~/.gitconfig; \
+        cat /tmp/.gitconfig >> $HOME/.gitconfig; \
     else \
         echo "[LOG] .gitconfig 文件不存在，直接复制..." && \
-        cp /tmp/.gitconfig ~/.gitconfig; \
+        cp /tmp/.gitconfig $HOME/.gitconfig; \
     fi
 
 # 配置 Python pip 国内镜像源
-RUN mkdir -p ~/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > ~/.config/pip/pip.conf
+RUN mkdir -p $HOME/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > $HOME/.config/pip/pip.conf
 
 # 配置缓存相关环境变量
-ENV npm_config_cache=~/.npm
-ENV pip_cache_dir=~/.cache/pip
+ENV npm_config_cache=$HOME/.npm
+ENV pip_cache_dir=$HOME/.cache/pip
 
 # 直接使用 npm 全局安装 OpenClaw
 RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
@@ -151,8 +156,8 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
         echo "[LOG] 创建 brew 符号链接..." && \
         ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
         echo "[LOG] 配置 brew 环境变量..." && \
-        echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
-        echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
+        echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> $HOME/.bashrc && \
+        echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> $HOME/.bashrc && \
         export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
         export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
         echo "[LOG] 测试 brew 安装..." && \
@@ -162,8 +167,8 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
     # 配置 brew 镜像源（无论是否新安装）
     echo "[LOG] 配置 brew 镜像源..." && \
     # 为 node 用户配置 brew 环境变量
-    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
-    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
+    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> $HOME/.bashrc && \
+    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> $HOME/.bashrc && \
     export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
     export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
     echo "[LOG] brew 镜像源配置完成..."
