@@ -18,8 +18,8 @@ Write-Host "Coder1: No external port mapping"
 Write-Host "Coder2: No external port mapping"
 Write-Host "Coder3: No external port mapping"
 Write-Host ""
-Write-Host "Waiting 5 seconds for containers to start..."
-Start-Sleep -Seconds 5
+Write-Host "Waiting 15 seconds for containers to start..."
+Start-Sleep -Seconds 15
 Write-Host "Check container status: docker-compose ps"
 docker-compose ps
 Write-Host "Check container logs: docker-compose logs -f"
