@@ -6,9 +6,9 @@ services:
     ports:
       - "42700:18798"
     volumes:
-      - ./serv/.openclaw:/home/node/.openclaw:rw           # Config and data
-      - ./serv/workspace:/home/node/workspace:rw
-      - ./serv/apps:/home/node/apps:rw        # Agent workspace
+      - ./serv/.openclaw/:/home/node/.openclaw/:rw           # Config and data
+      - ./serv/workspace/:/home/node/workspace/:rw           # Agent workspace
+      - ./serv/apps/:/home/node/apps/:rw        
     environment:
       - GATEWAY_ID=serv
       - PORT=18798
@@ -36,9 +36,9 @@ services:
     build: .
     container_name: coder1
     volumes:
-      - ./coder1/.openclaw:/home/node/.openclaw:rw           # Config and data
-      - ./coder1/workspace:/home/node/workspace:rw         # Agent workspace      
-      - ./coder1/apps:/home/node/apps:rw                   # Config apps
+      - ./coder1/.openclaw/:/home/node/.openclaw/:rw           # Config and data
+      - ./coder1/workspace/:/home/node/workspace/:rw         # Agent workspace      
+      - ./coder1/apps/:/home/node/apps/:rw                   # Config apps
     environment:
       - GATEWAY_ID=coder1
       - PORT=18798
@@ -66,9 +66,9 @@ services:
     build: .
     container_name: coder2
     volumes:
-      - ./coder2/.openclaw:/home/node/.openclaw:rw           # Config and data
-      - ./coder2/workspace:/home/node/workspace:rw         # Agent workspace   
-      - ./coder2/apps:/home/node/apps:rw                   # Config apps      
+      - ./coder2/.openclaw/:/home/node/.openclaw/:rw         # Config and data
+      - ./coder2/workspace/:/home/node/workspace/:rw         # Agent workspace   
+      - ./coder2/apps/:/home/node/apps/:rw                   # Config apps      
     environment:
       - GATEWAY_ID=coder2
       - PORT=18798
@@ -95,9 +95,9 @@ services:
     build: .
     container_name: coder3
     volumes:
-      - ./coder3/.openclaw:/home/node/.openclaw:rw           # Config and data
-      - ./coder3/workspace:/home/node/workspace:rw         # Agent workspace   
-      - ./coder3/apps:/home/node/apps:rw                   # Config apps      
+      - ./coder3/.openclaw/:/home/node/.openclaw/:rw           # Config and data
+      - ./coder3/workspace/:/home/node/workspace/:rw         # Agent workspace   
+      - ./coder3/apps/:/home/node/apps/:rw                   # Config apps      
     environment:
       - GATEWAY_ID=coder3
       - PORT=18798
