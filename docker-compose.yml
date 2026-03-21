@@ -7,7 +7,8 @@ services:
       - "42700:18798"
     volumes:
       - ./serv/.openclaw:~/.openclaw          # Config and data
-      - ./serv/workspace:~/workspace          # Agent workspace
+      - ./serv/workspace:~/workspace 
+      - ./serv/apps/:~/apps         # Agent workspace
     environment:
       - GATEWAY_ID=serv
       - PORT=18798
@@ -37,6 +38,7 @@ services:
     volumes:
       - ./coder1/.openclaw:~/.openclaw          # Config and data
       - ./coder1/workspace:~/workspace          # Agent workspace      
+      - ./coder1/apps:~/apps                    # Config apps
     environment:
       - GATEWAY_ID=coder1
       - PORT=18798
@@ -66,6 +68,7 @@ services:
     volumes:
       - ./coder2/.openclaw:~/.openclaw          # Config and data
       - ./coder2/workspace:~/workspace          # Agent workspace   
+      - ./coder2/apps:~/apps                    # Config apps      
     environment:
       - GATEWAY_ID=coder2
       - PORT=18798
@@ -87,3 +90,32 @@ services:
       start_period: 5s
       retries: 3
     privileged: true
+  # 网关 4 - Coder3
+  coder3:
+    build: .
+    container_name: coder3
+    volumes:
+      - ./coder3/.openclaw:~/.openclaw          # Config and data
+      - ./coder3/workspace:~/workspace          # Agent workspace   
+      - ./coder3/apps:~/apps                    # Config apps      
+    environment:
+      - GATEWAY_ID=coder3
+      - PORT=18798
+      - NODE_ENV=production
+      - npm_config_registry=https://registry.npmmirror.com/
+      - pnpm_config_registry=https://registry.npmmirror.com/
+      - TZ=Asia/Shanghai     # Set your timezone
+    restart: unless-stopped
+    mem_limit: 2g            # Prevent runaway memory usage
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"  
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18798/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    privileged: true    
