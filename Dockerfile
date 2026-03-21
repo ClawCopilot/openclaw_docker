@@ -5,23 +5,12 @@ FROM ${BASE_IMAGE}
 
 # 切换到 root 用户执行需要权限的操作
 USER root
-RUN echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-USER node
 
-# 安装 NodeJS 24 LTS
-RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
-    command -v node > /dev/null 2>&1 && echo "[LOG] NodeJS 已安装，跳过安装步骤" || ( \
-        echo "[LOG] NodeJS 未安装，开始安装 NodeJS 24 LTS..." && \
-        sudo apt-get update -y --allow-unauthenticated && \
-        sudo apt-get install -y --no-install-recommends curl ca-certificates && \
-        curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
-        sudo apt-get install -y nodejs && \
-        sudo apt-get clean && \
-        rm -rf /var/lib/apt/lists/* && \
-        echo "[LOG] NodeJS 安装完成" \
-    ) && \
-    node --version && \
-    npm --version
+# 安装 sudo
+RUN apt-get update -y --allow-unauthenticated && \
+    apt-get install -y --no-install-recommends sudo && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # 定义环境变量，方便后续修改镜像地址
 # 这里使用阿里云镜像，如需更换可在此处修改
@@ -35,8 +24,70 @@ ARG DEBIAN_VERSION_CODENAME=""
 # ---------------------------------------------------------
 # 复制并执行源配置脚本
 COPY configure_sources.sh /tmp/configure_sources.sh
-RUN bash /tmp/configure_sources.sh ${MIRROR_URL} && \
+RUN chmod +x /tmp/configure_sources.sh && \
+    bash /tmp/configure_sources.sh ${MIRROR_URL} && \
     rm /tmp/configure_sources.sh
+
+# 配置 wget 镜像源
+RUN echo "[LOG] 配置 wget 镜像源..." && \
+    echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc && \
+    echo "[LOG] 清理临时文件..." && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# 复制 GitHub Hosts 更新脚本到用户目录
+COPY update_hosts.sh /root/update_hosts.sh
+RUN chmod +x /root/update_hosts.sh
+
+# 首次执行脚本
+RUN /root/update_hosts.sh
+
+# 设置定时任务（每5小时执行一次）
+RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
+    chmod 644 /etc/cron.d/update_hosts
+
+# 清理临时文件
+RUN echo "[LOG] 清理临时文件..." && \
+    rm -rf /tmp/* /var/tmp/*    
+
+# 安装构建阶段依赖（包含编译工具）
+RUN echo "[LOG] 开始安装构建阶段依赖..." && \
+    apt-get update -y --allow-unauthenticated && \
+    echo "[LOG] 包列表更新完成，开始安装依赖包..." && \
+    apt-get install -y --no-install-recommends \
+    git \
+    vim \
+    sudo \
+    python3 \
+    python3-pip \
+    curl \
+    wget \
+    ca-certificates \
+    build-essential \
+    cron && \
+    # 给node用户添加sudo权限
+    echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    echo "[LOG] 依赖包安装完成，开始清理..." && \
+    apt-get clean && \
+    echo "[LOG] 清理完成"    
+
+# 切换到 node 用户    
+USER node    
+
+
+# 安装 NodeJS 24 LTS
+RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
+    command -v node > /dev/null 2>&1 && echo "[LOG] NodeJS 已安装，跳过安装步骤" || ( \
+        echo "[LOG] NodeJS 未安装，开始安装 NodeJS 24 LTS..." && \
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends curl ca-certificates && \
+        curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
+        apt-get install -y nodejs && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/* && \
+        echo "[LOG] NodeJS 安装完成" \
+    ) && \
+    node --version && \
+    npm --version    
 
 # 设置环境变量
 ENV npm_config_registry=https://registry.npmmirror.com/
@@ -55,49 +106,6 @@ RUN mkdir -p ~/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.tsin
 ENV npm_config_cache=~/.npm
 ENV pip_cache_dir=~/.cache/pip
 
-# 安装构建阶段依赖（包含编译工具）
-RUN echo "[LOG] 开始安装构建阶段依赖..." && \
-    sudo apt-get update -y --allow-unauthenticated && \
-    echo "[LOG] 包列表更新完成，开始安装依赖包..." && \
-    sudo apt-get install -y --no-install-recommends \
-    git \
-    vim \
-    sudo \
-    python3 \
-    python3-pip \
-    curl \
-    wget \
-    ca-certificates \
-    build-essential \
-    cron && \
-    # 给node用户添加sudo权限
-    echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    echo "[LOG] 依赖包安装完成，开始清理..." && \
-    sudo apt-get clean && \
-    echo "[LOG] 清理完成"
-
-# 配置 wget 镜像源
-RUN echo "[LOG] 配置 wget 镜像源..." && \
-    echo "ftp://mirror.bit.edu.cn" > /etc/wgetrc && \
-    echo "[LOG] 清理临时文件..." && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# 复制 GitHub Hosts 更新脚本到用户目录
-COPY update_hosts.sh ~/update_hosts.sh
-RUN chmod +x ~/update_hosts.sh
-
-# 首次执行脚本
-RUN ~/update_hosts.sh
-
-# 设置定时任务（每5小时执行一次）
-RUN echo "0 */5 * * * ~/update_hosts.sh" > /etc/cron.d/update_hosts && \
-    chmod 644 /etc/cron.d/update_hosts && \
-    crontab /etc/cron.d/update_hosts
-
-# 清理临时文件
-RUN echo "[LOG] 清理临时文件..." && \
-    rm -rf /tmp/* /var/tmp/*
-
 # 直接使用 npm 全局安装 OpenClaw
 RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
     command -v openclaw > /dev/null 2>&1 && echo "[LOG] OpenClaw 已安装，跳过安装步骤..." || ( \
@@ -113,46 +121,34 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
         # 安装必要的依赖
         sudo apt-get update -y --allow-unauthenticated && \
         sudo apt-get install -y --no-install-recommends build-essential curl git && \
-        # 创建非 root 用户
-        useradd -m -s /bin/bash brewuser && \
-        # 给 brewuser 添加 sudo 权限
-        echo 'brewuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
         # 创建 brew 安装目录并设置权限
         echo "[LOG] 创建 brew 安装目录..." && \
-        mkdir -p /home/linuxbrew/.linuxbrew && \
-        chown -R brewuser:brewuser /home/linuxbrew && \
-        # 切换到 brewuser 安装 brew
-        su - brewuser -c " \
-            echo '[LOG] 从国内镜像源克隆 Homebrew 仓库...' && \
-            git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
-            echo '[LOG] 从国内镜像源克隆 Homebrew Core 仓库...' && \
-            git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
-            echo '[LOG] 创建 bin 目录...' && \
-            mkdir -p /home/linuxbrew/.linuxbrew/bin && \
-            echo '[LOG] 创建 brew 符号链接...' && \
-            ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
-            echo '[LOG] 配置 brew 环境变量...' && \
-            echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
-            echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
-            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
-            export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
-            echo '[LOG] 测试 brew 安装...' && \
-            brew --version \
-        " && \
+        sudo mkdir -p /home/linuxbrew/.linuxbrew && \
+        sudo chown -R node:node /home/linuxbrew && \
+        # 直接以 node 用户身份安装 brew
+        echo "[LOG] 从国内镜像源克隆 Homebrew 仓库..." && \
+        git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
+        echo "[LOG] 从国内镜像源克隆 Homebrew Core 仓库..." && \
+        git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
+        echo "[LOG] 创建 bin 目录..." && \
+        mkdir -p /home/linuxbrew/.linuxbrew/bin && \
+        echo "[LOG] 创建 brew 符号链接..." && \
+        ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
+        echo "[LOG] 配置 brew 环境变量..." && \
+        echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
+        echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
+        export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
+        export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
+        echo "[LOG] 测试 brew 安装..." && \
+        brew --version && \
         echo "[LOG] brew 安装完成..." \
     ) && \
     # 配置 brew 镜像源（无论是否新安装）
     echo "[LOG] 配置 brew 镜像源..." && \
-    # 为当前用户配置 brew 环境变量
+    # 为 node 用户配置 brew 环境变量
     echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
     echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
     export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
     export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
-    # 为 root 用户配置 brew 环境变量
-    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> ~/.bashrc && \
-    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> ~/.bashrc && \
     echo "[LOG] brew 镜像源配置完成..."
 
-
-# 切换到node用户
-USER node    
