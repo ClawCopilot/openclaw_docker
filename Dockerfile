@@ -95,9 +95,25 @@ ENV pnpm_config_registry=https://registry.npmmirror.com/
 ENV PYTHONUNBUFFERED=1
 
 
-# 复制 npm 和 git 配置文件
-COPY .npmrc ~/.npmrc
-COPY .gitconfig ~/.gitconfig
+# 复制 npm 配置文件（如果存在则追加，不存在则复制）
+COPY .npmrc /tmp/.npmrc
+RUN if [ -f "~/.npmrc" ]; then \
+        echo "[LOG] .npmrc 文件已存在，追加内容..." && \
+        cat /tmp/.npmrc >> ~/.npmrc; \
+    else \
+        echo "[LOG] .npmrc 文件不存在，直接复制..." && \
+        cp /tmp/.npmrc ~/.npmrc; \
+    fi
+
+# 复制 git 配置文件（如果存在则追加，不存在则复制）
+COPY .gitconfig /tmp/.gitconfig
+RUN if [ -f "~/.gitconfig" ]; then \
+        echo "[LOG] .gitconfig 文件已存在，追加内容..." && \
+        cat /tmp/.gitconfig >> ~/.gitconfig; \
+    else \
+        echo "[LOG] .gitconfig 文件不存在，直接复制..." && \
+        cp /tmp/.gitconfig ~/.gitconfig; \
+    fi
 
 # 配置 Python pip 国内镜像源
 RUN mkdir -p ~/.config/pip && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > ~/.config/pip/pip.conf
