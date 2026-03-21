@@ -8,7 +8,7 @@
 
 ## Version
 
-- Current version: v1.1.1
+- Current version: v2026.3.21
 
 ## Overview
 
