@@ -4,6 +4,10 @@
 [![Language](https://img.shields.io/badge/Language-中文-red)](./README.zh.md)
 [![Language](https://img.shields.io/badge/Language-日本語-green)](./README.ja.md)
 
+## Version
+
+- Current version: v1.1.0
+
 ## Overview
 
 This project provides a Docker-based deployment solution for OpenClaw with multiple independent gateways. It supports fast deployment, easy management, and optimized performance using domestic mirror sources.
@@ -51,6 +55,7 @@ This project provides a Docker-based deployment solution for OpenClaw with multi
 - **Serv**: http://localhost:42700
 - **Coder1**: No external port mapping (internal access only)
 - **Coder2**: No external port mapping (internal access only)
+- **Coder3**: No external port mapping (internal access only)
 
 ## Directory Structure
 
@@ -83,10 +88,11 @@ openclaw_docker/
 
 ### Docker Compose
 
-- Defines three services: serv, coder1, coder2
+- Defines four services: serv, coder1, coder2, coder3
 - Serv is exposed on port 42700
 - Each service has its own data volume
 - All services run in privileged mode
+- Uses environment variables for configuration, supports custom configuration via .env file
 
 ## Script Usage
 
@@ -118,9 +124,24 @@ openclaw_docker/
 
 ## Environment Variables
 
-- `NODE_ENV`: production
-- `npm_config_registry`: https://registry.npmmirror.com/
-- `PYTHONUNBUFFERED`: 1
+Configure the following environment variables through .env file:
+
+- `SERV_PORT`: External port for Serv service, default 42700
+- `CONTAINER_MEM_LIMIT`: Container memory limit, default 2g
+- `CONTAINER_RESTART_POLICY`: Container restart policy, default unless-stopped
+- `TZ`: Timezone setting, default Asia/Shanghai
+- `npm_config_registry`: npm mirror source, default https://registry.npmmirror.com/
+- `pnpm_config_registry`: pnpm mirror source, default https://registry.npmmirror.com/
+- `pip_config_index_url`: pip mirror source, default https://pypi.tuna.tsinghua.edu.cn/simple
+- `git_config_url`: git mirror source, default https://github.com.cnpmjs.org
+- `LOG_MAX_SIZE`: Maximum log file size, default 10m
+- `LOG_MAX_FILE`: Maximum number of log files, default 3
+- `HEALTHCHECK_INTERVAL`: Health check interval, default 30s
+- `HEALTHCHECK_TIMEOUT`: Health check timeout, default 10s
+- `HEALTHCHECK_START_PERIOD`: Health check start period, default 5s
+- `HEALTHCHECK_RETRIES`: Health check retries, default 3
+- `NETWORK_MODE`: Network mode, default bridge
+- `OPENCLAW_NODE_ENV`: OpenClaw runtime environment, default production
 
 ## Troubleshooting
 

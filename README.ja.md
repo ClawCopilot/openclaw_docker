@@ -4,6 +4,10 @@
 [![Language](https://img.shields.io/badge/Language-中文-red)](./README.zh.md)
 [![Language](https://img.shields.io/badge/Language-日本語-green)](./README.ja.md)
 
+## バージョン
+
+- 現在のバージョン：v1.1.0
+
 ## プロジェクト概要
 
 このプロジェクトは、複数の独立したゲートウェイを備えた OpenClaw の Docker ベースのデプロイソリューションを提供します。国内のミラーソースを使用して、迅速なデプロイ、簡単な管理、最適化されたパフォーマンスをサポートします。
@@ -51,6 +55,7 @@
 - **Serv**：http://localhost:42700
 - **Coder1**：外部ポートマッピングなし（内部アクセスのみ）
 - **Coder2**：外部ポートマッピングなし（内部アクセスのみ）
+- **Coder3**：外部ポートマッピングなし（内部アクセスのみ）
 
 ## ディレクトリ構造
 
@@ -83,10 +88,11 @@ openclaw_docker/
 
 ### Docker Compose
 
-- 3 つのサービスを定義：serv、coder1、coder2
+- 4 つのサービスを定義：serv、coder1、coder2、coder3
 - Serv はポート 42700 で公開されています
 - 各サービスには独自のデータボリュームがあります
 - すべてのサービスは特権モードで実行されます
+- 環境変数を使用した構成、.env ファイルを介したカスタム構成をサポート
 
 ## スクリプトの使用
 
@@ -118,9 +124,24 @@ openclaw_docker/
 
 ## 環境変数
 
-- `NODE_ENV`：production
-- `npm_config_registry`：https://registry.npmmirror.com/
-- `PYTHONUNBUFFERED`：1
+.env ファイルを介して以下の環境変数を構成します：
+
+- `SERV_PORT`：Serv サービスの外部ポート、デフォルト 42700
+- `CONTAINER_MEM_LIMIT`：コンテナのメモリ制限、デフォルト 2g
+- `CONTAINER_RESTART_POLICY`：コンテナの再起動ポリシー、デフォルト unless-stopped
+- `TZ`：タイムゾーン設定、デフォルト Asia/Shanghai
+- `npm_config_registry`：npm ミラーソース、デフォルト https://registry.npmmirror.com/
+- `pnpm_config_registry`：pnpm ミラーソース、デフォルト https://registry.npmmirror.com/
+- `pip_config_index_url`：pip ミラーソース、デフォルト https://pypi.tuna.tsinghua.edu.cn/simple
+- `git_config_url`：git ミラーソース、デフォルト https://github.com.cnpmjs.org
+- `LOG_MAX_SIZE`：ログファイルの最大サイズ、デフォルト 10m
+- `LOG_MAX_FILE`：ログファイルの最大数、デフォルト 3
+- `HEALTHCHECK_INTERVAL`：ヘルスチェック間隔、デフォルト 30s
+- `HEALTHCHECK_TIMEOUT`：ヘルスチェックのタイムアウト、デフォルト 10s
+- `HEALTHCHECK_START_PERIOD`：ヘルスチェックの開始期間、デフォルト 5s
+- `HEALTHCHECK_RETRIES`：ヘルスチェックのリトライ回数、デフォルト 3
+- `NETWORK_MODE`：ネットワークモード、デフォルト bridge
+- `OPENCLAW_NODE_ENV`：OpenClaw 実行環境、デフォルト production
 
 ## トラブルシューティング
 

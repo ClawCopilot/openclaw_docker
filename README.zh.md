@@ -4,6 +4,10 @@
 [![Language](https://img.shields.io/badge/Language-中文-red)](./README.zh.md)
 [![Language](https://img.shields.io/badge/Language-日本語-green)](./README.ja.md)
 
+## 版本
+
+- 当前版本：v1.1.0
+
 ## 项目概述
 
 本项目提供了一个基于 Docker 的 OpenClaw 多网关独立部署解决方案。它支持快速部署、易于管理，并使用国内镜像源优化性能。
@@ -51,6 +55,7 @@
 - **Serv**：http://localhost:42700
 - **Coder1**：无外部端口映射（仅内部访问）
 - **Coder2**：无外部端口映射（仅内部访问）
+- **Coder3**：无外部端口映射（仅内部访问）
 
 ## 目录结构
 
@@ -83,10 +88,11 @@ openclaw_docker/
 
 ### Docker Compose
 
-- 定义三个服务：serv、coder1、coder2
+- 定义四个服务：serv、coder1、coder2、coder3
 - Serv 暴露在端口 42700
 - 每个服务有自己的数据卷
 - 所有服务以特权模式运行
+- 使用环境变量配置，支持通过 .env 文件自定义配置
 
 ## 脚本使用
 
@@ -118,9 +124,24 @@ openclaw_docker/
 
 ## 环境变量
 
-- `NODE_ENV`：production
-- `npm_config_registry`：https://registry.npmmirror.com/
-- `PYTHONUNBUFFERED`：1
+通过 .env 文件配置以下环境变量：
+
+- `SERV_PORT`：Serv 服务的对外端口，默认 42700
+- `CONTAINER_MEM_LIMIT`：容器内存限制，默认 2g
+- `CONTAINER_RESTART_POLICY`：容器重启策略，默认 unless-stopped
+- `TZ`：时区设置，默认 Asia/Shanghai
+- `npm_config_registry`：npm 镜像源，默认 https://registry.npmmirror.com/
+- `pnpm_config_registry`：pnpm 镜像源，默认 https://registry.npmmirror.com/
+- `pip_config_index_url`：pip 镜像源，默认 https://pypi.tuna.tsinghua.edu.cn/simple
+- `git_config_url`：git 镜像源，默认 https://github.com.cnpmjs.org
+- `LOG_MAX_SIZE`：日志文件最大大小，默认 10m
+- `LOG_MAX_FILE`：日志文件最大数量，默认 3
+- `HEALTHCHECK_INTERVAL`：健康检查间隔，默认 30s
+- `HEALTHCHECK_TIMEOUT`：健康检查超时，默认 10s
+- `HEALTHCHECK_START_PERIOD`：健康检查启动期，默认 5s
+- `HEALTHCHECK_RETRIES`：健康检查重试次数，默认 3
+- `NETWORK_MODE`：网络模式，默认 bridge
+- `OPENCLAW_NODE_ENV`：OpenClaw 运行环境，默认 production
 
 ## 故障排除
 
