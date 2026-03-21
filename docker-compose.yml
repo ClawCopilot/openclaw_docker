@@ -8,7 +8,7 @@ services:
     volumes:
       - ./serv/.openclaw:~/.openclaw          # Config and data
       - ./serv/workspace:~/workspace 
-      - ./serv/apps/:~/apps         # Agent workspace
+      - ./serv/apps:~/apps         # Agent workspace
     environment:
       - GATEWAY_ID=serv
       - PORT=18798
