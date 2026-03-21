@@ -1,3 +1,8 @@
+# Change to the directory where this script is located
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location -Path $scriptDir
+Write-Host "Changed working directory to: $(Get-Location)"
+
 # Create gateway directories
 $gateways = @("serv", "coder1", "coder2", "coder3")
 foreach ($gateway in $gateways) {
@@ -5,6 +10,9 @@ foreach ($gateway in $gateways) {
     New-Item -ItemType Directory -Path "$gateway\workspace" -Force
     New-Item -ItemType Directory -Path "$gateway\apps" -Force
 }
+
+# Create between gateway share directories
+New-Item -ItemType Directory -Path "share" -Force
 
 # Build and start Docker containers
 docker-compose up -d --build

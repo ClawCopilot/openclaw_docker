@@ -35,7 +35,8 @@ services:
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace
-      - ./serv/apps:/home/node/apps:U,z       
+      - ./serv/apps:/home/node/apps:U,z                    # Config apps
+      - ./share:/home/node/share:U,z                       # Config share
     environment:
       - GATEWAY_ID=serv
       - SERV_PORT=${SERV_PORT:-42700}
@@ -45,9 +46,10 @@ services:
     <<: *base-service
     container_name: coder1
     volumes:
-      - ./coder1/.openclaw:/home/node/.openclaw:U,z          # Config and data
+      - ./coder1/.openclaw:/home/node/.openclaw:U,z        # Config and data
       - ./coder1/workspace:/home/node/workspace:U,z        # Agent workspace      
       - ./coder1/apps:/home/node/apps:U,z                  # Config apps
+      - ./share:/home/node/share:U,z                       # Config share
     environment:
       - GATEWAY_ID=coder1
 
@@ -59,6 +61,7 @@ services:
       - ./coder2/.openclaw:/home/node/.openclaw:U,z        # Config and data
       - ./coder2/workspace:/home/node/workspace:U,z        # Agent workspace   
       - ./coder2/apps:/home/node/apps:U,z                  # Config apps      
+      - ./share:/home/node/share:U,z                       # Config share
     environment:
       - GATEWAY_ID=coder2
 
@@ -69,6 +72,7 @@ services:
     volumes:
       - ./coder3/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./coder3/workspace:/home/node/workspace:U,z        # Agent workspace   
-      - ./coder3/apps:/home/node/apps:U,z                  # Config apps      
+      - ./coder3/apps:/home/node/apps:U,z                  # Config apps   
+      - ./share:/home/node/share:U,z                       # Config share   
     environment:
       - GATEWAY_ID=coder3    

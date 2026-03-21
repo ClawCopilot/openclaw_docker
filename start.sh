@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# Create gateway directories
+# Change to the directory where this script is located
+cd "$(dirname "$0")"
+echo "Changed working directory to: $(pwd)"
+
 # Create gateway directories
 gateways=("serv" "coder1" "coder2" "coder3")
 dirs=(".openclaw" "workspace" "apps")
@@ -10,6 +13,10 @@ for gateway in "${gateways[@]}"; do
         chown -R 1000:1000 "$gateway/$dir"
     done
 done
+
+# Create bettwen gateway share directoris
+mkdir -p "share"
+chown -R 1000:1000 "share"
 
 # Build and start Docker containers
 docker-compose up -d --build
