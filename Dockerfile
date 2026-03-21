@@ -76,7 +76,31 @@ USER node
 
 # 修复目录权限
 RUN mkdir -p "$HOME/.openclaw" "$HOME/workspace" "$HOME/apps" && \
-    chown -R 1000:1000 "$HOME/.openclaw" "$HOME/workspace" "$HOME/apps"
+    echo "[LOG] 检查目录权限..." && \
+    # 检查每个目录的所有者是否为 1000:1000
+    for dir in "$HOME/.openclaw" "$HOME/workspace" "$HOME/apps"; do \
+        owner=$(stat -c "%u:%g" "$dir"); \
+        if [ "$owner" != "1000:1000" ]; then \
+            echo "[LOG] 修复 $dir 目录权限..." && \
+            chown -R 1000:1000 "$dir" || { \
+                echo "[ERROR] 修复 $dir 目录权限失败！" && \
+                exit 1; \
+            }; \
+        else \
+            echo "[LOG] $dir 目录权限已正确，跳过修复..."; \
+        fi; \
+    done && \
+    # 再次检查权限，确保修复成功
+    echo "[LOG] 验证目录权限修复结果..." && \
+    for dir in "$HOME/.openclaw" "$HOME/workspace" "$HOME/apps"; do \
+        owner=$(stat -c "%u:%g" "$dir"); \
+        if [ "$owner" != "1000:1000" ]; then \
+            echo "[ERROR] $dir 目录权限修复失败，当前所有者为 $owner，期望为 1000:1000" && \
+            exit 1; \
+        else \
+            echo "[LOG] $dir 目录权限验证成功，所有者为 $owner"; \
+        fi; \
+    done
 
 
 # 安装 NodeJS 24 LTS
