@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Change to the directory where this script is located
+cd "$(dirname "$0")"
+echo "Changed working directory to: $(pwd)"
+
 # 定义支持的容器名称
 valid_containers=("serv" "coder1" "coder2" "coder3")
 

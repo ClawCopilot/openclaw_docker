@@ -2,6 +2,11 @@ param(
     [string]$ContainerName = "all"
 )
 
+# Change to the directory where this script is located
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location -Path $scriptDir
+Write-Host "Changed working directory to: $(Get-Location)"
+
 # 定义支持的容器名称
 $ValidContainers = @("serv", "coder1", "coder2", "coder3")
 
