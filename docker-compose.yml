@@ -26,53 +26,39 @@ x-base-service:
 
 # 服务配置
 services:
-  # 网关 1 - serv
+  # 网关 1 - sme1
+  sme1:
+    <<: *base-service
+    container_name: sme1
+    volumes:
+      - ./sme1/.openclaw:/home/node/.openclaw:U,z          # Config and data
+      - ./sme1/workspace:/home/node/workspace:U,z          # Agent workspace
+      - ./sme1/apps:/home/node/apps:U,z                    # Config apps
+      - ./share:/home/node/share:U,z                             # Config share
+    environment:
+      - GATEWAY_ID=sme1
+
+  # 网关 2 - sme2
+  sme2:
+    <<: *base-service
+    container_name: sme2
+    volumes:
+      - ./sme2/.openclaw:/home/node/.openclaw:U,z          # Config and data
+      - ./sme2/workspace:/home/node/workspace:U,z          # Agent workspace
+      - ./sme2/apps:/home/node/apps:U,z                    # Config apps
+      - ./share:/home/node/share:U,z                             # Config share
+    environment:
+      - GATEWAY_ID=sme2
+
+  # 网关 3 - serv
   serv:
     <<: *base-service
     container_name: serv
-    ports:
-      - "${SERV_PORT:-42700}:18789"
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./serv/apps:/home/node/apps:U,z                    # Config apps
-      - ./share:/home/node/share:U,z                       # Config share
+      - ./share:/home/node/share:U,z                             # Config share
     environment:
       - GATEWAY_ID=serv
-      - SERV_PORT=${SERV_PORT:-42700}
 
-  # 网关 2 - Coder1
-  coder1:
-    <<: *base-service
-    container_name: coder1
-    volumes:
-      - ./coder1/.openclaw:/home/node/.openclaw:U,z        # Config and data
-      - ./coder1/workspace:/home/node/workspace:U,z        # Agent workspace      
-      - ./coder1/apps:/home/node/apps:U,z                  # Config apps
-      - ./share:/home/node/share:U,z                       # Config share
-    environment:
-      - GATEWAY_ID=coder1
-
-  # 网关 3 - Coder2
-  coder2:
-    <<: *base-service
-    container_name: coder2
-    volumes:
-      - ./coder2/.openclaw:/home/node/.openclaw:U,z        # Config and data
-      - ./coder2/workspace:/home/node/workspace:U,z        # Agent workspace   
-      - ./coder2/apps:/home/node/apps:U,z                  # Config apps      
-      - ./share:/home/node/share:U,z                       # Config share
-    environment:
-      - GATEWAY_ID=coder2
-
-  # 网关 4 - Coder3
-  coder3:
-    <<: *base-service
-    container_name: coder3
-    volumes:
-      - ./coder3/.openclaw:/home/node/.openclaw:U,z          # Config and data
-      - ./coder3/workspace:/home/node/workspace:U,z        # Agent workspace   
-      - ./coder3/apps:/home/node/apps:U,z                  # Config apps   
-      - ./share:/home/node/share:U,z                       # Config share   
-    environment:
-      - GATEWAY_ID=coder3    
