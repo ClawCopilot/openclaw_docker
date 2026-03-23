@@ -11,6 +11,7 @@ fi
 # 设置默认值
 GATEWAY_SERVICES=${GATEWAY_SERVICES:-serv,coder1,coder2,coder3}
 GATEWAY_PORTS=${GATEWAY_PORTS:-}
+GATEWAY_VOLUMES=${GATEWAY_VOLUMES:-}
 
 # 解析服务列表
 IFS=',' read -ra services <<< "$GATEWAY_SERVICES"
@@ -25,33 +26,51 @@ for port in "${ports[@]}"; do
   fi
 done
 
+# 解析额外 volumes 配置
+declare -A volume_map
+IFS=',' read -ra volumes <<< "$GATEWAY_VOLUMES"
+for volume in "${volumes[@]}"; do
+  IFS=':' read -ra parts <<< "$volume"
+  if [ ${#parts[@]} -eq 3 ]; then
+    service="${parts[0]}"
+    host_path="${parts[1]}"
+    container_path="${parts[2]}"
+    # 存储格式: service -> "host_path:container_path,host_path2:container_path2"
+    if [ -z "${volume_map[$service]}" ]; then
+      volume_map[$service]="$host_path:$container_path"
+    else
+      volume_map[$service]="${volume_map[$service]},$host_path:$container_path"
+    fi
+  fi
+done
+
 # 生成 docker-compose.yml
-cat > docker-compose.yml << EOF
+cat > docker-compose.yml << 'EOF'
 # 公共配置锚点
 x-base-service:
   &base-service
   build: .
   environment:
     - PORT=18789
-    - NODE_ENV=\${OPENCLAW_NODE_ENV:-production}
-    - npm_config_registry=\${npm_config_registry:-https://registry.npmmirror.com/}
-    - pnpm_config_registry=\${pnpm_config_registry:-https://registry.npmmirror.com/}
-    - TZ=\${TZ:-Asia/Shanghai}
-  restart: \${CONTAINER_RESTART_POLICY:-unless-stopped}
-  mem_limit: \${CONTAINER_MEM_LIMIT:-2g}
+    - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
+    - npm_config_registry=${npm_config_registry:-https://registry.npmmirror.com/}
+    - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}
+    - TZ=${TZ:-Asia/Shanghai}
+  restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}
+  mem_limit: ${CONTAINER_MEM_LIMIT:-2g}
   logging:
     driver: json-file
     options:
-      max-size: "\${LOG_MAX_SIZE:-10m}"
-      max-file: "\${LOG_MAX_FILE:-3}"
+      max-size: "${LOG_MAX_SIZE:-10m}"
+      max-file: "${LOG_MAX_FILE:-3}"
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:18789/health"]
-    interval: \${HEALTHCHECK_INTERVAL:-30s}
-    timeout: \${HEALTHCHECK_TIMEOUT:-10s}
-    start_period: \${HEALTHCHECK_START_PERIOD:-5s}
-    retries: \${HEALTHCHECK_RETRIES:-3}
+    interval: ${HEALTHCHECK_INTERVAL:-30s}
+    timeout: ${HEALTHCHECK_TIMEOUT:-10s}
+    start_period: ${HEALTHCHECK_START_PERIOD:-5s}
+    retries: ${HEALTHCHECK_RETRIES:-3}
   privileged: true
-  network_mode: \${NETWORK_MODE:-bridge}
+  network_mode: ${NETWORK_MODE:-bridge}
 
 # 服务配置
 services:
@@ -84,17 +103,30 @@ EOF
 EOF
   fi
 
+  # 添加固定 volumes
   cat >> docker-compose.yml << EOF
     volumes:
       - ./$gateway_id/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./$gateway_id/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./$gateway_id/apps:/home/node/apps:U,z                    # Config apps
       - ./share:/home/node/share:U,z                             # Config share
+EOF
+
+  # 添加额外 volumes（如果存在）
+  if [[ ${volume_map[$gateway_id]+_} ]]; then
+    IFS=',' read -ra extra_volumes <<< "${volume_map[$gateway_id]}"
+    for extra_vol in "${extra_volumes[@]}"; do
+      IFS=':' read -ra vol_parts <<< "$extra_vol"
+      if [ ${#vol_parts[@]} -eq 2 ]; then
+        echo "      - ${vol_parts[0]}:${vol_parts[1]}:U,z" >> docker-compose.yml
+      fi
+    done
+  fi
+
+  cat >> docker-compose.yml << EOF
     environment:
       - GATEWAY_ID=$gateway_id
 EOF
-
-
 
   cat >> docker-compose.yml << EOF
 

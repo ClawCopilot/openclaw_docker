@@ -19,6 +19,7 @@ if (Test-Path -Path ".env") {
 # 设置默认值
 $gatewayServices = "serv,coder1,coder2,coder3"
 $gatewayPorts = ""
+$gatewayVolumes = ""
 
 if ($env:GATEWAY_SERVICES) {
     $gatewayServices = $env:GATEWAY_SERVICES
@@ -26,6 +27,10 @@ if ($env:GATEWAY_SERVICES) {
 
 if ($env:GATEWAY_PORTS) {
     $gatewayPorts = $env:GATEWAY_PORTS
+}
+
+if ($env:GATEWAY_VOLUMES) {
+    $gatewayVolumes = $env:GATEWAY_VOLUMES
 }
 
 # 解析服务列表
@@ -38,6 +43,24 @@ if ($gatewayPorts) {
         $parts = $_.Split(':')
         if ($parts.Length -eq 2) {
             $portMap[$parts[0].Trim()] = $parts[1].Trim()
+        }
+    }
+}
+
+# 解析额外 volumes 配置
+$volumeMap = @{}
+if ($gatewayVolumes) {
+    $gatewayVolumes.Split(',') | ForEach-Object {
+        $parts = $_.Split(':')
+        if ($parts.Length -eq 3) {
+            $serviceName = $parts[0].Trim()
+            $hostPath = $parts[1].Trim()
+            $containerPath = $parts[2].Trim()
+            $volumeEntry = "$hostPath`:$containerPath"
+            if (-not $volumeMap.ContainsKey($serviceName)) {
+                $volumeMap[$serviceName] = @()
+            }
+            $volumeMap[$serviceName] += $volumeEntry
         }
     }
 }
@@ -103,6 +126,17 @@ foreach ($serviceName in $services) {
     $lines += "      - ./$gatewayId/workspace:/home/node/workspace:U,z          # Agent workspace"
     $lines += "      - ./$gatewayId/apps:/home/node/apps:U,z                    # Config apps"
     $lines += "      - ./share:/home/node/share:U,z                             # Config share"
+
+    # 添加额外 volumes（如果存在）
+    if ($volumeMap.ContainsKey($gatewayId)) {
+        foreach ($vol in $volumeMap[$gatewayId]) {
+            $volParts = $vol -split ':'
+            if ($volParts.Length -eq 2) {
+                $lines += "      - $($volParts[0]):$($volParts[1]):U,z"
+            }
+        }
+    }
+
     $lines += "    environment:"
     $lines += "      - GATEWAY_ID=$gatewayId"
 
