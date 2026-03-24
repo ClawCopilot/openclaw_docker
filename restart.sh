@@ -4,8 +4,16 @@
 cd "$(dirname "$0")"
 echo "Changed working directory to: $(pwd)"
 
-# 定义支持的容器名称
-valid_containers=("serv" "coder1" "coder2" "coder3")
+# 加载环境变量
+if [ -f .env ]; then
+  export $(cat .env | grep -v '#' | xargs)
+fi
+
+# 设置默认值
+GATEWAY_SERVICES=${GATEWAY_SERVICES:-serv,coder1,coder2,coder3}
+
+# 解析服务列表
+IFS=',' read -ra valid_containers <<< "$GATEWAY_SERVICES"
 
 # 检查参数
 if [ $# -eq 0 ]; then
@@ -15,7 +23,7 @@ elif [ $# -eq 1 ]; then
 else
     echo "Error: Too many arguments"
     echo "Usage: $0 [container_name]"
-    echo "Valid container names: all, serv, coder1, coder2, coder3"
+    echo "Valid container names: all, ${valid_containers[*]}"
     exit 1
 fi
 
@@ -30,7 +38,7 @@ if [ "$container_name" != "all" ]; then
     done
     if [ "$valid" == "false" ]; then
         echo "Error: Invalid container name"
-        echo "Valid container names: all, serv, coder1, coder2, coder3"
+        echo "Valid container names: all, ${valid_containers[*]}"
         exit 1
     fi
 fi

@@ -4,9 +4,19 @@
 cd "$(dirname "$0")"
 echo "Changed working directory to: $(pwd)"
 
-# Define gateway directories
-gateways=(("serv" "coder1" "coder2" "coder3"))
-dirs=((".openclaw" "workspace" "apps"))
+# 加载环境变量
+if [ -f .env ]; then
+  export $(cat .env | grep -v '#' | xargs)
+fi
+
+# 设置默认值
+GATEWAY_SERVICES=${GATEWAY_SERVICES:-serv,coder1,coder2,coder3}
+
+# 解析服务列表
+IFS=',' read -ra gateways <<< "$GATEWAY_SERVICES"
+
+# 定义子目录
+dirs=(".openclaw" "workspace" "apps")
 
 # Fix permissions for gateway directories
 echo "Fixing permissions for gateway directories..."
@@ -26,7 +36,8 @@ for gateway in "${gateways[@]}"; do
 done
 
 # Fix permissions for share directory
-echo "\nFixing permissions for share directory..."
+echo ""
+echo "Fixing permissions for share directory..."
 if [ -d "share" ]; then
     echo "Fixing permissions for share..."
     chown -R 1000:1000 "share"
@@ -39,7 +50,8 @@ else
 fi
 
 # Verify permissions
-echo "\nVerifying permissions..."
+echo ""
+echo "Verifying permissions..."
 for gateway in "${gateways[@]}"; do
     for dir in "${dirs[@]}"; do
         if [ -d "$gateway/$dir" ]; then
@@ -52,5 +64,6 @@ if [ -d "share" ]; then
     echo "share: $(stat -c "%u:%g" "share")"
 fi
 
-echo "\nPermission fix completed!"
+echo ""
+echo "Permission fix completed!"
 echo "All directories now have correct permissions for the node user (UID: 1000, GID: 1000)"

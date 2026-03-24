@@ -2,30 +2,38 @@ param(
     [string]$ContainerName = "all"
 )
 
-# Change to the directory where this script is located
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -Path $scriptDir
 Write-Host "Changed working directory to: $(Get-Location)"
 
-# 定义支持的容器名称
-$ValidContainers = @("serv", "coder1", "coder2" "coder3")
+if (Test-Path -Path ".env") {
+    Get-Content ".env" | Where-Object { $_ -notmatch "^#" -and $_ -match "=" } | ForEach-Object {
+        $key, $value = $_ -split "=", 2
+        [Environment]::SetEnvironmentVariable($key.Trim(), $value.Trim().Trim('"'))
+    }
+}
 
-# 检查容器名称是否有效
+$gatewayServices = "serv,coder1,coder2,coder3"
+
+if ($env:GATEWAY_SERVICES) {
+    $gatewayServices = $env:GATEWAY_SERVICES
+}
+
+$ValidContainers = $gatewayServices.Split(',') | ForEach-Object { $_.Trim() }
+
 if ($ContainerName -ne "all" -and $ValidContainers -notcontains $ContainerName) {
-    Write-Host "Error: Invalid container name. Valid containers are: all, serv, coder1, coder2, coder3"
+    Write-Host "Error: Invalid container name. Valid containers are: all, $($ValidContainers -join ', ')"
     exit 1
 }
 
-# 停止容器
 if ($ContainerName -eq "all") {
     Write-Host "Stopping all OpenClaw containers..."
     docker-compose down
 } else {
-    Write-Host "Stopping container: $ContainerName..."
+    Write-Host "Stopping container: ${ContainerName}..."
     docker-compose stop $ContainerName
 }
 
-# 显示状态
 Write-Host ""
 Write-Host "Container status:"
 docker-compose ps

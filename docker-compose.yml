@@ -26,10 +26,9 @@ x-base-service:
 
 # 服务配置
 services:
+
   # 网关 1 - sme1
   sme1:
-    <<: *base-service
-    container_name: sme1
     volumes:
       - ./sme1/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme1/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -40,8 +39,6 @@ services:
 
   # 网关 2 - sme2
   sme2:
-    <<: *base-service
-    container_name: sme2
     volumes:
       - ./sme2/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme2/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -52,8 +49,6 @@ services:
 
   # 网关 3 - serv
   serv:
-    <<: *base-service
-    container_name: serv
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -61,4 +56,3 @@ services:
       - ./share:/home/node/share:U,z                             # Config share
     environment:
       - GATEWAY_ID=serv
-
