@@ -6,7 +6,7 @@
 
 ## バージョン
 
-- 現在のバージョン：v2026.3.21
+- 現在のバージョン：v2026.3.24
 
 ## プロジェクト概要
 
@@ -15,8 +15,9 @@
 ## 機能
 
 - **マルチゲートウェイデプロイ**：別々のコンテナで複数の独立した OpenClaw ゲートウェイを実行
+- **動的設定**：.env ファイルでサービス、ポート、ボリュームを柔軟に設定
 - **国内ミラーソース**：中国における依存関係のダウンロードを高速化
-- **簡単な管理**：起動、停止、再起動スクリプトを提供
+- **簡単な管理**：起動、停止、再起動、権限修正スクリプトを提供
 - **特権モード**：より良いパフォーマンスのための権限強化
 - **ヘルスチェック**：コンテナの自動健康モニタリング
 
@@ -32,7 +33,8 @@
 
 1. このリポジトリをクローンします
 2. プロジェクトディレクトリに移動します
-3. 起動スクリプトを実行します：
+3. `.env` ファイルを設定します（オプション）
+4. 起動スクリプトを実行します：
    ```powershell
    .\start.ps1
    ```
@@ -41,42 +43,82 @@
 
 1. このリポジトリをクローンします
 2. プロジェクトディレクトリに移動します
-3. スクリプトを実行可能にします：
+3. `.env` ファイルを設定します（オプション）
+4. スクリプトを実行可能にします：
    ```bash
-   chmod +x start.sh
+   chmod +x *.sh
    ```
-4. 起動スクリプトを実行します：
+5. 起動スクリプトを実行します：
    ```bash
    ./start.sh
    ```
-
-## アクセスアドレス
-
-- **Serv**：http://localhost:42700
-- **Coder1**：外部ポートマッピングなし（内部アクセスのみ）
-- **Coder2**：外部ポートマッピングなし（内部アクセスのみ）
-- **Coder3**：外部ポートマッピングなし（内部アクセスのみ）
 
 ## ディレクトリ構造
 
 ```
 openclaw_docker/
-├── .gitconfig          # ミラー付きの Git 設定
-├── .npmrc             # ミラー付きの npm 設定
-├── Dockerfile         # Docker ビルドファイル
-├── docker-compose.yml  # Docker Compose 設定
-├── sources.list        # 国内ミラー付きの APT ソース
-├── configure_sources.sh  # APT ソース設定スクリプト
-├── update_hosts.sh     # GitHub Hosts 更新スクリプト
-├── start.ps1          # Windows 起動スクリプト
-├── start.sh           # Linux/Mac 起動スクリプト
-├── stop.ps1           # Windows 停止スクリプト
-├── stop.sh            # Linux/Mac 停止スクリプト
-├── restart.ps1        # Windows 再起動スクリプト
-└── restart.sh         # Linux/Mac 再起動スクリプト
+├── .env                    # 環境変数設定ファイル
+├── .gitconfig              # ミラー付きの Git 設定
+├── .npmrc                  # ミラー付きの npm 設定
+├── Dockerfile              # Docker ビルドファイル
+├── docker-compose.yml      # Docker Compose 設定（動的生成）
+├── sources.list            # 国内ミラー付きの APT ソース
+├── configure_sources.sh    # APT ソース設定スクリプト
+├── update_hosts.sh         # GitHub Hosts 更新スクリプト
+├── generate-compose.sh     # docker-compose.yml 生成（Linux/Mac）
+├── generate-compose.ps1    # docker-compose.yml 生成（Windows）
+├── fix_permissions.sh      # ディレクトリ権限修正（Linux/Mac）
+├── fix_permissions.ps1     # ディレクトリ権限修正（Windows）
+├── start.sh                # 起動スクリプト（Linux/Mac）
+├── start.ps1               # 起動スクリプト（Windows）
+├── stop.sh                 # 停止スクリプト（Linux/Mac）
+├── stop.ps1                # 停止スクリプト（Windows）
+├── restart.sh              # 再起動スクリプト（Linux/Mac）
+└── restart.ps1             # 再起動スクリプト（Windows）
 ```
 
 ## 設定説明
+
+### 環境変数（.env ファイル）
+
+`.env` ファイルでサービスを設定します：
+
+```env
+# サービス設定
+# 形式: GATEWAY_SERVICES=service1,service2,service3
+GATEWAY_SERVICES=serv,coder1,coder2,coder3
+
+# ポート設定
+# 形式: GATEWAY_PORTS=service1:port1,service2:port2
+GATEWAY_PORTS=serv:42700
+
+# 追加ボリューム設定
+# 形式: GATEWAY_VOLUMES=service1:/host/path1:/container/path1,service2:/host/path2:/container/path2
+GATEWAY_VOLUMES=
+```
+
+### 完全な環境変数リスト
+
+| 変数 | 説明 | デフォルト |
+|------|------|------------|
+| `GATEWAY_SERVICES` | サービスリスト、カンマ区切り | `serv,coder1,coder2,coder3` |
+| `GATEWAY_PORTS` | ポートマッピング、形式：`サービス:ポート` | 空 |
+| `GATEWAY_VOLUMES` | 追加ボリュームマッピング、形式：`サービス:ホストパス:コンテナパス` | 空 |
+| `CONTAINER_MEM_LIMIT` | コンテナのメモリ制限 | `2g` |
+| `CONTAINER_RESTART_POLICY` | コンテナの再起動ポリシー | `unless-stopped` |
+| `TZ` | タイムゾーン設定 | `Asia/Shanghai` |
+| `npm_config_registry` | npm ミラーソース | `https://registry.npmmirror.com/` |
+| `pnpm_config_registry` | pnpm ミラーソース | `https://registry.npmmirror.com/` |
+| `pip_config_index_url` | pip ミラーソース | `https://pypi.tuna.tsinghua.edu.cn/simple` |
+| `git_config_url` | git ミラーソース | `https://github.com.cnpmjs.org` |
+| `LOG_MAX_SIZE` | ログファイルの最大サイズ | `10m` |
+| `LOG_MAX_FILE` | ログファイルの最大数 | `3` |
+| `HEALTHCHECK_INTERVAL` | ヘルスチェック間隔 | `30s` |
+| `HEALTHCHECK_TIMEOUT` | ヘルスチェックのタイムアウト | `10s` |
+| `HEALTHCHECK_START_PERIOD` | ヘルスチェックの開始期間 | `5s` |
+| `HEALTHCHECK_RETRIES` | ヘルスチェックのリトライ回数 | `3` |
+| `NETWORK_MODE` | ネットワークモード | `bridge` |
+| `OPENCLAW_NODE_ENV` | OpenClaw 実行環境 | `production` |
 
 ### Dockerfile
 
@@ -86,62 +128,83 @@ openclaw_docker/
 - npm を使用して OpenClaw をグローバルにインストール
 - GitHub Hosts 更新スクリプト（update_hosts.sh）を含み、5時間ごとに実行
 
-### Docker Compose
-
-- 4 つのサービスを定義：serv、coder1、coder2、coder3
-- Serv はポート 42700 で公開されています
-- 各サービスには独自のデータボリュームがあります
-- すべてのサービスは特権モードで実行されます
-- 環境変数を使用した構成、.env ファイルを介したカスタム構成をサポート
-
 ## スクリプトの使用
+
+### 設定生成スクリプト
+
+- `generate-compose.sh` / `generate-compose.ps1`：.env 設定に基づいて docker-compose.yml を生成
+  ```bash
+  # 設定ファイルを生成
+  ./generate-compose.sh
+  ```
+
+### 権限修正スクリプト
+
+- `fix_permissions.sh` / `fix_permissions.ps1`：サービスディレクトリの権限を作成・修正
+  ```bash
+  # すべてのサービスディレクトリの権限を修正
+  ./fix_permissions.sh
+  ```
 
 ### 起動スクリプト
 
-- `start.ps1` / `start.sh`：すべてのコンテナを起動
+- `start.sh` / `start.ps1`：すべてのコンテナを起動
+  ```bash
+  # すべてのコンテナを起動
+  ./start.sh
+  ```
 
 ### 停止スクリプト
 
-- `stop.ps1` / `stop.sh`：すべてのコンテナまたは特定のコンテナを停止
-  ```powershell
+- `stop.sh` / `stop.ps1`：すべてのコンテナまたは特定のコンテナを停止
+  ```bash
   # すべてのコンテナを停止
-  .\stop.ps1
+  ./stop.sh
   
   # 特定のコンテナを停止
-  .\stop.ps1 serv
+  ./stop.sh serv
   ```
 
 ### 再起動スクリプト
 
-- `restart.ps1` / `restart.sh`：すべてのコンテナまたは特定のコンテナを再起動
-  ```powershell
+- `restart.sh` / `restart.ps1`：すべてのコンテナまたは特定のコンテナを再起動
+  ```bash
   # すべてのコンテナを再起動
-  .\restart.ps1
+  ./restart.sh
   
   # 特定のコンテナを再起動
-  .\restart.ps1 serv
+  ./restart.sh serv
   ```
 
-## 環境変数
+## カスタムサービス設定例
 
-.env ファイルを介して以下の環境変数を構成します：
+### 例 1：カスタムサービスリスト
 
-- `SERV_PORT`：Serv サービスの外部ポート、デフォルト 42700
-- `CONTAINER_MEM_LIMIT`：コンテナのメモリ制限、デフォルト 2g
-- `CONTAINER_RESTART_POLICY`：コンテナの再起動ポリシー、デフォルト unless-stopped
-- `TZ`：タイムゾーン設定、デフォルト Asia/Shanghai
-- `npm_config_registry`：npm ミラーソース、デフォルト https://registry.npmmirror.com/
-- `pnpm_config_registry`：pnpm ミラーソース、デフォルト https://registry.npmmirror.com/
-- `pip_config_index_url`：pip ミラーソース、デフォルト https://pypi.tuna.tsinghua.edu.cn/simple
-- `git_config_url`：git ミラーソース、デフォルト https://github.com.cnpmjs.org
-- `LOG_MAX_SIZE`：ログファイルの最大サイズ、デフォルト 10m
-- `LOG_MAX_FILE`：ログファイルの最大数、デフォルト 3
-- `HEALTHCHECK_INTERVAL`：ヘルスチェック間隔、デフォルト 30s
-- `HEALTHCHECK_TIMEOUT`：ヘルスチェックのタイムアウト、デフォルト 10s
-- `HEALTHCHECK_START_PERIOD`：ヘルスチェックの開始期間、デフォルト 5s
-- `HEALTHCHECK_RETRIES`：ヘルスチェックのリトライ回数、デフォルト 3
-- `NETWORK_MODE`：ネットワークモード、デフォルト bridge
-- `OPENCLAW_NODE_ENV`：OpenClaw 実行環境、デフォルト production
+```env
+# 3つのカスタムサービスを定義
+GATEWAY_SERVICES=sme1,sme2,serv
+```
+
+### 例 2：ポートマッピングの設定
+
+```env
+GATEWAY_SERVICES=serv,coder1
+GATEWAY_PORTS=serv:42700,coder1:42800
+```
+
+### 例 3：追加ボリュームの設定
+
+```env
+GATEWAY_SERVICES=serv
+GATEWAY_VOLUMES=serv:/data/volumes:/data,serv:/opt/config:/app/config
+```
+
+## アクセスアドレス
+
+`GATEWAY_PORTS` 設定に基づき、デフォルトでは：
+
+- ポートマッピングが設定されたサービスは対応するポートからアクセス可能
+- ポートマッピングが設定されていないサービスは内部アクセスのみ
 
 ## トラブルシューティング
 
@@ -159,6 +222,14 @@ openclaw_docker/
 
 ```bash
 docker-compose logs -f
+```
+
+### 権限の問題
+
+権限の問題が発生した場合は、権限修正スクリプトを実行してください：
+
+```bash
+./fix_permissions.sh
 ```
 
 ## 貢献
