@@ -30,6 +30,8 @@ services:
   sme1:
     <<: *base-service
     container_name: sme1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     mem_limit: 2g
     volumes:
       - ./sme1/.openclaw:/home/node/.openclaw:U,z          # Config and data
@@ -43,6 +45,8 @@ services:
   sme2:
     <<: *base-service
     container_name: sme2
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     mem_limit: 2g
     volumes:
       - ./sme2/.openclaw:/home/node/.openclaw:U,z          # Config and data
@@ -56,6 +60,8 @@ services:
   serv:
     <<: *base-service
     container_name: serv
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     mem_limit: 2g
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data

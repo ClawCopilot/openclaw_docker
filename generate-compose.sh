@@ -92,6 +92,8 @@ for service_name in "${services[@]}"; do
   $service_name:
     <<: *base-service
     container_name: $container_name
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 EOF
 
   # 添加 mem_limit（如果设置了 CONTAINER_MEM_LIMIT）
