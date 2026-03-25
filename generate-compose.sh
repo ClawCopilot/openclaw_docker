@@ -35,7 +35,6 @@ for volume in "${volumes[@]}"; do
     service="${parts[0]}"
     host_path="${parts[1]}"
     container_path="${parts[2]}"
-    # 存储格式: service -> "host_path:container_path,host_path2:container_path2"
     if [ -z "${volume_map[$service]}" ]; then
       volume_map[$service]="$host_path:$container_path"
     else
@@ -57,7 +56,6 @@ x-base-service:
     - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}
     - TZ=${TZ:-Asia/Shanghai}
   restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}
-  mem_limit: ${CONTAINER_MEM_LIMIT:-2g}
   logging:
     driver: json-file
     options:
@@ -95,6 +93,13 @@ for service_name in "${services[@]}"; do
     <<: *base-service
     container_name: $container_name
 EOF
+
+  # 添加 mem_limit（如果设置了 CONTAINER_MEM_LIMIT）
+  if [ -n "$CONTAINER_MEM_LIMIT" ]; then
+    cat >> docker-compose.yml << EOF
+    mem_limit: $CONTAINER_MEM_LIMIT
+EOF
+  fi
 
   if [ -n "$ports" ]; then
     cat >> docker-compose.yml << EOF

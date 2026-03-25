@@ -9,7 +9,6 @@ x-base-service:
     - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}
     - TZ=${TZ:-Asia/Shanghai}
   restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}
-  mem_limit: ${CONTAINER_MEM_LIMIT:-2g}
   logging:
     driver: json-file
     options:
@@ -29,6 +28,9 @@ services:
 
   # 网关 1 - sme1
   sme1:
+    <<: *base-service
+    container_name: sme1
+    mem_limit: 2g
     volumes:
       - ./sme1/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme1/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -39,6 +41,9 @@ services:
 
   # 网关 2 - sme2
   sme2:
+    <<: *base-service
+    container_name: sme2
+    mem_limit: 2g
     volumes:
       - ./sme2/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme2/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -49,6 +54,9 @@ services:
 
   # 网关 3 - serv
   serv:
+    <<: *base-service
+    container_name: serv
+    mem_limit: 2g
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace

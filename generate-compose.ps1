@@ -1,4 +1,4 @@
-# 切换到脚本所在目录
+﻿# 切换到脚本所在目录
 $scriptDir = $PSScriptRoot
 if (-not $scriptDir) {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -86,7 +86,6 @@ $lines += '    - npm_config_registry=${npm_config_registry:-https://registry.npm
 $lines += '    - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}'
 $lines += '    - TZ=${TZ:-Asia/Shanghai}'
 $lines += '  restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}'
-$lines += '  mem_limit: ${CONTAINER_MEM_LIMIT:-2g}'
 $lines += "  logging:"
 $lines += "    driver: json-file"
 $lines += "    options:"
@@ -114,6 +113,13 @@ foreach ($serviceName in $services) {
     $lines += ""
     $lines += "  # $textGateway $i - $gatewayId"
     $lines += "  $serviceName`:"
+    $lines += "    <<: *base-service"
+    $lines += "    container_name: $containerName"
+
+    # 添加 mem_limit（如果设置了 CONTAINER_MEM_LIMIT）
+    if ($env:CONTAINER_MEM_LIMIT) {
+        $lines += "    mem_limit: $($env:CONTAINER_MEM_LIMIT)"
+    }
 
     if ($portMap.ContainsKey($gatewayId)) {
         $port = $portMap[$gatewayId]
