@@ -122,6 +122,13 @@ RUN mkdir -p "$HOME/.config/pip" && echo "[global]\nindex-url = https://pypi.tun
 ENV npm_config_cache="$HOME/.npm"
 ENV pip_cache_dir="$HOME/.cache/pip"
 
+RUN mkdir -p "$npm_config_cache"
+RUN mkdir -p "$pip_cache_dir"
+
+# 以下路径可能是权限造成的，需要创建及修复, 做兼容修复
+RUN sudo mkdir -p "/.npm" && sudo chown -R 1000:1000 "/.npm"
+RUN sudo mkdir -p "/.cache/pip" && sudo chown -R 1000:1000 "/.cache/pip"
+
 # 直接使用 npm 全局安装 OpenClaw
 RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
     command -v openclaw > /dev/null 2>&1 && echo "[LOG] OpenClaw 已安装，跳过安装步骤..." || ( \
