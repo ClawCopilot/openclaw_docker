@@ -1,6 +1,2 @@
 [url "https://gitclone.com/github.com/"]
-	insteadOf = git@github.com:
-[url "https://gitclone.com/github.com/"]
-	insteadOf = ssh://git@github.com/
-[url "https://gitclone.com/github.com/"]
 	insteadOf = https://github.com/
