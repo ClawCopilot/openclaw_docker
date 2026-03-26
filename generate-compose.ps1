@@ -118,9 +118,10 @@ foreach ($serviceName in $services) {
     $lines += "    extra_hosts:"
     $lines += "      - `"host.docker.internal:host-gateway`""
 
-    # 添加 mem_limit（如果设置了 CONTAINER_MEM_LIMIT）
+    # 添加 mem_limit 和 memswap_limit（如果设置了 CONTAINER_MEM_LIMIT）
     if ($env:CONTAINER_MEM_LIMIT) {
         $lines += "    mem_limit: $($env:CONTAINER_MEM_LIMIT)"
+        $lines += "    memswap_limit: $($env:CONTAINER_MEM_LIMIT)"
     }
 
     if ($portMap.ContainsKey($gatewayId)) {

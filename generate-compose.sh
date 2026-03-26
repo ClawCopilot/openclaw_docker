@@ -96,10 +96,11 @@ for service_name in "${services[@]}"; do
       - "host.docker.internal:host-gateway"
 EOF
 
-  # 添加 mem_limit（如果设置了 CONTAINER_MEM_LIMIT）
+  # 添加 mem_limit 和 memswap_limit（如果设置了 CONTAINER_MEM_LIMIT）
   if [ -n "$CONTAINER_MEM_LIMIT" ]; then
     cat >> docker-compose.yml << EOF
     mem_limit: $CONTAINER_MEM_LIMIT
+    memswap_limit: $CONTAINER_MEM_LIMIT
 EOF
   fi
 
