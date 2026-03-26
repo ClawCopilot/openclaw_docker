@@ -25,7 +25,6 @@ x-base-service:
 
 # 服务配置
 services:
-
   # 网关 1 - sme1
   sme1:
     <<: *base-service
@@ -73,3 +72,4 @@ services:
       - ./share:/home/node/share:U,z                             # Config share
     environment:
       - GATEWAY_ID=serv
+
