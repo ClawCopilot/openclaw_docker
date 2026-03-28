@@ -168,12 +168,19 @@ RUN mkdir -p "$HOME/.cargo" && \
 # 安装 Go
 ARG GO_VERSION=1.22.0
 ARG GOPROXY_MIRRORS=goproxy.cn,goproxy.io,direct
+USER root
 RUN echo "[LOG] 检查 Go 是否已安装..." && \
     command -v go > /dev/null 2>&1 && echo "[LOG] Go 已安装，跳过安装步骤..." || ( \
         echo "[LOG] Go 未安装，开始安装 Go $GO_VERSION..." && \
-        curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf - && \
+        GO_DOWNLOAD_URL="https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+        curl -fsSL --connect-timeout 10 "$GO_DOWNLOAD_URL" -o /tmp/go.tar.gz || \
+        curl -fsSL "https://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz || \
+        curl -fsSL "https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz && \
+        tar -C /usr/local -xzf /tmp/go.tar.gz && \
+        rm -f /tmp/go.tar.gz && \
         echo "[LOG] Go 安装完成..." \
     )
+USER node
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="$HOME/go"
 ENV PATH="$GOPATH/bin:${PATH}"
