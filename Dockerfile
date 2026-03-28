@@ -3,6 +3,10 @@
 ARG BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
 FROM ${BASE_IMAGE}
 
+# 定义用户主目录
+ARG CONTAINER_HOME=/home/node
+ENV HOME=${CONTAINER_HOME}
+
 # 切换到 root 用户执行需要权限的操作
 USER root
 

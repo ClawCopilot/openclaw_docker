@@ -81,6 +81,8 @@ $lines += "  &base-service"
 $lines += "  build:"
 $lines += "    context: ."
 $lines += "    args:"
+$containerHome = if ($env:CONTAINER_HOME) { $env:CONTAINER_HOME } else { "/home/node" }
+$lines += "      - CONTAINER_HOME=$containerHome"
 $pipMirror = if ($env:PIP_MIRROR) { $env:PIP_MIRROR } else { "tuna" }
 $lines += "      - PIP_MIRROR=$pipMirror"
 $rustMirror = if ($env:RUST_CRATES_MIRROR) { $env:RUST_CRATES_MIRROR } else { "tuna" }

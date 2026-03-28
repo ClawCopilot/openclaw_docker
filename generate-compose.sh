@@ -51,6 +51,7 @@ x-base-service:
   build:
     context: .
     args:
+      - CONTAINER_HOME=${CONTAINER_HOME:-/home/node}
       - PIP_MIRROR=${PIP_MIRROR:-tuna}
       - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
   environment:
