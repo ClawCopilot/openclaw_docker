@@ -4,14 +4,15 @@ x-base-service:
   build:
     context: .
     args:
-      - CONTAINER_HOME=/home/node
-      - TZ=Asia/Shanghai
-      - PIP_MIRROR=tuna
-      - RUST_VERSION=stable
-      - RUST_CRATES_MIRROR=tuna
-      - GO_VERSION=1.22.0
-      - GOPROXY_MIRRORS=goproxy.cn,goproxy.io,direct
-      - DOCKER_HUB_MIRRORS=daocloud,aliyun,tuna
+      - BASE_IMAGE=${BASE_IMAGE:-ghcr.m.daocloud.io/openclaw/openclaw:latest}
+      - CONTAINER_HOME=${CONTAINER_HOME:-/home/node}
+      - TZ=${TZ:-Asia/Shanghai}
+      - PIP_MIRROR=${PIP_MIRROR:-tuna}
+      - RUST_VERSION=${RUST_VERSION:-stable}
+      - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
+      - GO_VERSION=${GO_VERSION:-1.22.0}
+      - GOPROXY_MIRRORS=${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}
+      - DOCKER_HUB_MIRRORS=${DOCKER_HUB_MIRRORS:-daocloud,aliyun,tuna}
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
@@ -35,7 +36,6 @@ x-base-service:
 
 # 服务配置
 services:
-
   # 网关 1 - sme1
   sme1:
     <<: *base-service
@@ -83,3 +83,4 @@ services:
       - ./share:/home/node/share:U,z                             # Config share
     environment:
       - GATEWAY_ID=serv
+

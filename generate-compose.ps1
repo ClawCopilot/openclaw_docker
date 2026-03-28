@@ -81,6 +81,8 @@ $lines += "  &base-service"
 $lines += "  build:"
 $lines += "    context: ."
 $lines += "    args:"
+$baseImage = if ($env:BASE_IMAGE) { $env:BASE_IMAGE } else { "ghcr.m.daocloud.io/openclaw/openclaw:latest" }
+$lines += "      - BASE_IMAGE=$baseImage"
 $containerHome = if ($env:CONTAINER_HOME) { $env:CONTAINER_HOME } else { "/home/node" }
 $lines += "      - CONTAINER_HOME=$containerHome"
 $tz = if ($env:TZ) { $env:TZ } else { "Asia/Shanghai" }

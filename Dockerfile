@@ -1,5 +1,5 @@
 # 基础镜像：使用 Ubuntu 24 LTS
-# ARG BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
+# 可通过 --build-arg BASE_IMAGE=xxx 指定其他镜像
 ARG BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
 FROM ${BASE_IMAGE}
 

@@ -51,6 +51,7 @@ x-base-service:
   build:
     context: .
     args:
+      - BASE_IMAGE=${BASE_IMAGE:-ghcr.m.daocloud.io/openclaw/openclaw:latest}
       - CONTAINER_HOME=${CONTAINER_HOME:-/home/node}
       - TZ=${TZ:-Asia/Shanghai}
       - PIP_MIRROR=${PIP_MIRROR:-tuna}
