@@ -120,7 +120,15 @@ RUN if [ -f "$HOME/.gitconfig" ]; then \
     fi
 
 # 配置 Python pip 国内镜像源
-RUN mkdir -p "$HOME/.config/pip" && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > "$HOME/.config/pip/pip.conf"
+ARG PIP_MIRROR=tuna
+RUN mkdir -p "$HOME/.config/pip" && \
+    if [ "$PIP_MIRROR" = "tuna" ]; then \
+        printf '[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\ntrusted-host = pypi.tuna.tsinghua.edu.cn\n' > "$HOME/.config/pip/pip.conf"; \
+    elif [ "$PIP_MIRROR" = "aliyun" ]; then \
+        printf '[global]\nindex-url = https://mirrors.aliyun.com/pypi/simple/\ntrusted-host = mirrors.aliyun.com\n' > "$HOME/.config/pip/pip.conf"; \
+    elif [ "$PIP_MIRROR" = "douban" ]; then \
+        printf '[global]\nindex-url = https://pypi.doubanio.com/simple/\ntrusted-host = pypi.doubanio.com\n' > "$HOME/.config/pip/pip.conf"; \
+    fi
 
 # 配置 Rust crates.io 国内镜像源
 ARG RUST_CRATES_MIRROR=tuna

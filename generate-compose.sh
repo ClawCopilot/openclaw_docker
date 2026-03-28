@@ -51,6 +51,7 @@ x-base-service:
   build:
     context: .
     args:
+      - PIP_MIRROR=${PIP_MIRROR:-tuna}
       - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
   environment:
     - PORT=18789

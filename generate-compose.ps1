@@ -81,6 +81,8 @@ $lines += "  &base-service"
 $lines += "  build:"
 $lines += "    context: ."
 $lines += "    args:"
+$pipMirror = if ($env:PIP_MIRROR) { $env:PIP_MIRROR } else { "tuna" }
+$lines += "      - PIP_MIRROR=$pipMirror"
 $rustMirror = if ($env:RUST_CRATES_MIRROR) { $env:RUST_CRATES_MIRROR } else { "tuna" }
 $lines += "      - RUST_CRATES_MIRROR=$rustMirror"
 $lines += "  environment:"
