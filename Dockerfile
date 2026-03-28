@@ -240,13 +240,19 @@ ENV pip_cache_dir="$HOME/.cache/pip"
 RUN mkdir -p "$npm_config_cache"
 RUN mkdir -p "$pip_cache_dir"
 
-# 直接使用 npm 全局安装 OpenClaw
+# 尝试安装 OpenClaw（如果基础镜像未包含）
 RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
     command -v openclaw > /dev/null 2>&1 && echo "[LOG] OpenClaw 已安装，跳过安装步骤..." || ( \
         echo "[LOG] OpenClaw 未安装，开始安装 OpenClaw..." && \
         npm install -g openclaw@latest && \
         echo "[LOG] OpenClaw 安装完成..." \
     )
+
+# 复制 entrypoint 脚本
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+USER root
+RUN chmod +x /usr/local/bin/entrypoint.sh
+USER node
 
 # 安装 brew（使用国内镜像源）
 RUN echo "[LOG] 检查 brew 是否已安装..." && \
@@ -285,3 +291,6 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
 # 设置 brew 环境变量
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
 ENV HOMEBREW_BOTTLE_DOMAIN="https://mirrors.ustc.edu.cn/homebrew-bottles"
+
+# 设置 entrypoint（在容器启动时检测并启动 OpenClaw）
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
