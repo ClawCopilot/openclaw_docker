@@ -54,6 +54,7 @@ x-base-service:
       - CONTAINER_HOME=${CONTAINER_HOME:-/home/node}
       - TZ=${TZ:-Asia/Shanghai}
       - PIP_MIRROR=${PIP_MIRROR:-tuna}
+      - RUST_VERSION=${RUST_VERSION:-stable}
       - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
   environment:
     - PORT=18789

@@ -87,6 +87,8 @@ $tz = if ($env:TZ) { $env:TZ } else { "Asia/Shanghai" }
 $lines += "      - TZ=$tz"
 $pipMirror = if ($env:PIP_MIRROR) { $env:PIP_MIRROR } else { "tuna" }
 $lines += "      - PIP_MIRROR=$pipMirror"
+$rustVersion = if ($env:RUST_VERSION) { $env:RUST_VERSION } else { "stable" }
+$lines += "      - RUST_VERSION=$rustVersion"
 $rustMirror = if ($env:RUST_CRATES_MIRROR) { $env:RUST_CRATES_MIRROR } else { "tuna" }
 $lines += "      - RUST_CRATES_MIRROR=$rustMirror"
 $lines += "  environment:"

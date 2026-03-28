@@ -144,6 +144,16 @@ RUN mkdir -p "$HOME/.config/pip" && \
         printf '[global]\nindex-url = https://pypi.doubanio.com/simple/\ntrusted-host = pypi.doubanio.com\n' > "$HOME/.config/pip/pip.conf"; \
     fi
 
+# 安装 Rust
+ARG RUST_VERSION=stable
+RUN echo "[LOG] 检查 Rust 是否已安装..." && \
+    command -v rustc > /dev/null 2>&1 && echo "[LOG] Rust 已安装，跳过安装步骤..." || ( \
+        echo "[LOG] Rust 未安装，开始安装 Rust $RUST_VERSION..." && \
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $RUST_VERSION && \
+        echo "[LOG] Rust 安装完成..." \
+    )
+ENV PATH="$HOME/.cargo/bin:${PATH}"
+
 # 配置 Rust crates.io 国内镜像源
 ARG RUST_CRATES_MIRROR=tuna
 RUN mkdir -p "$HOME/.cargo" && \
@@ -207,4 +217,3 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
     export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
     export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
     echo "[LOG] brew 镜像源配置完成..."
-
