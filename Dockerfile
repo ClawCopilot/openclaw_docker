@@ -277,11 +277,11 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
         brew --version && \
         echo "[LOG] brew 安装完成..." \
     ) && \
-    # 配置 brew 镜像源（无论是否新安装）
     echo "[LOG] 配置 brew 镜像源..." && \
-    # 为 node 用户配置 brew 环境变量
     echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> "$HOME/.bashrc" && \
     echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> "$HOME/.bashrc" && \
-    export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
-    export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
     echo "[LOG] brew 镜像源配置完成..."
+
+# 设置 brew 环境变量
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
+ENV HOMEBREW_BOTTLE_DOMAIN="https://mirrors.ustc.edu.cn/homebrew-bottles"
