@@ -78,7 +78,11 @@ $lines = @()
 $lines += "# $textPublicConfig"
 $lines += "x-base-service:"
 $lines += "  &base-service"
-$lines += "  build: ."
+$lines += "  build:"
+$lines += "    context: ."
+$lines += "    args:"
+$rustMirror = if ($env:RUST_CRATES_MIRROR) { $env:RUST_CRATES_MIRROR } else { "tuna" }
+$lines += "      - RUST_CRATES_MIRROR=$rustMirror"
 $lines += "  environment:"
 $lines += "    - PORT=18789"
 $lines += '    - NODE_ENV=${OPENCLAW_NODE_ENV:-production}'

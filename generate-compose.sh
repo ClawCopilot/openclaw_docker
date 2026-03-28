@@ -48,7 +48,10 @@ cat > docker-compose.yml << 'EOF'
 # 公共配置锚点
 x-base-service:
   &base-service
-  build: .
+  build:
+    context: .
+    args:
+      - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}

@@ -122,6 +122,17 @@ RUN if [ -f "$HOME/.gitconfig" ]; then \
 # 配置 Python pip 国内镜像源
 RUN mkdir -p "$HOME/.config/pip" && echo "[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\nextra-index-url = https://pypi.aliyun.com/simple/\ntrusted-host = pypi.tuna.tsinghua.edu.cn pypi.aliyun.com" > "$HOME/.config/pip/pip.conf"
 
+# 配置 Rust crates.io 国内镜像源
+ARG RUST_CRATES_MIRROR=tuna
+RUN mkdir -p "$HOME/.cargo" && \
+    if [ "$RUST_CRATES_MIRROR" = "tuna" ]; then \
+        printf '[source.crates-io]\nreplace-with = "tuna"\n[source.tuna]\nregistry = "https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"\n' > "$HOME/.cargo/config.toml"; \
+    elif [ "$RUST_CRATES_MIRROR" = "ustc" ]; then \
+        printf '[source.crates-io]\nreplace-with = "ustc"\n[source.ustc]\nregistry = "https://mirrors.ustc.edu.cn/crates.io-index"\n' > "$HOME/.cargo/config.toml"; \
+    elif [ "$RUST_CRATES_MIRROR" = "rsproxy" ]; then \
+        printf '[source.crates-io]\nreplace-with = "rsproxy"\n[source.rsproxy]\nregistry = "https://rsproxy.cn/crates.io-index"\n' > "$HOME/.cargo/config.toml"; \
+    fi
+
 # 配置缓存相关环境变量
 ENV npm_config_cache="$HOME/.npm"
 ENV pip_cache_dir="$HOME/.cache/pip"
