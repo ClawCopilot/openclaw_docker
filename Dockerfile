@@ -10,10 +10,6 @@ ENV HOME=${CONTAINER_HOME}
 # 切换到 root 用户执行需要权限的操作
 USER root
 
-# 以下路径可能是权限造成的，需要创建及修复, 做兼容修复
-RUN mkdir -p "/.npm" && chown -R 1000:1000 "/.npm"
-RUN mkdir -p "/.cache/pip" && chown -R 1000:1000 "/.cache/pip"
-
 # 安装 sudo
 RUN apt-get update -y --allow-unauthenticated && \
     apt-get install -y --no-install-recommends sudo && \
@@ -232,13 +228,6 @@ RUN echo "[LOG] 配置 Docker Hub 镜像加速..." && \
     printf '{\n  "registry-mirrors": %s\n}\n' "$MIRROR_JSON" > /etc/docker/daemon.json && \
     echo "[LOG] Docker Hub 镜像加速配置完成: $MIRROR_JSON"
 USER node
-
-# 配置缓存相关环境变量
-ENV npm_config_cache="$HOME/.npm"
-ENV pip_cache_dir="$HOME/.cache/pip"
-
-RUN mkdir -p "$npm_config_cache"
-RUN mkdir -p "$pip_cache_dir"
 
 # 尝试安装 OpenClaw（如果基础镜像未包含）
 RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
