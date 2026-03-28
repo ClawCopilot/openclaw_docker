@@ -57,6 +57,16 @@ RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
 RUN echo "[LOG] 清理临时文件..." && \
     rm -rf /tmp/* /var/tmp/*    
 
+# 配置时区
+ARG TZ=Asia/Shanghai
+ENV TZ=${TZ}
+RUN apt-get update -y --allow-unauthenticated && \
+    apt-get install -y --no-install-recommends tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # 安装构建阶段依赖（包含编译工具）
 RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     apt-get update -y --allow-unauthenticated && \

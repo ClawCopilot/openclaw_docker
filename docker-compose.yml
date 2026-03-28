@@ -5,6 +5,7 @@ x-base-service:
     context: .
     args:
       - CONTAINER_HOME=/home/node
+      - TZ=Asia/Shanghai
       - PIP_MIRROR=tuna
       - RUST_CRATES_MIRROR=tuna
   environment:
