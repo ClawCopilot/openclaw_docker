@@ -56,6 +56,9 @@ x-base-service:
       - PIP_MIRROR=${PIP_MIRROR:-tuna}
       - RUST_VERSION=${RUST_VERSION:-stable}
       - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
+      - GO_VERSION=${GO_VERSION:-1.22.0}
+      - GOPROXY_MIRRORS=${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}
+      - DOCKER_HUB_MIRRORS=${DOCKER_HUB_MIRRORS:-daocloud,aliyun,tuna}
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}

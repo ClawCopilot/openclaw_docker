@@ -91,6 +91,12 @@ $rustVersion = if ($env:RUST_VERSION) { $env:RUST_VERSION } else { "stable" }
 $lines += "      - RUST_VERSION=$rustVersion"
 $rustMirror = if ($env:RUST_CRATES_MIRROR) { $env:RUST_CRATES_MIRROR } else { "tuna" }
 $lines += "      - RUST_CRATES_MIRROR=$rustMirror"
+$goVersion = if ($env:GO_VERSION) { $env:GO_VERSION } else { "1.22.0" }
+$lines += "      - GO_VERSION=$goVersion"
+$goproxyMirrors = if ($env:GOPROXY_MIRRORS) { $env:GOPROXY_MIRRORS } else { "goproxy.cn,goproxy.io,direct" }
+$lines += "      - GOPROXY_MIRRORS=$goproxyMirrors"
+$dockerHubMirrors = if ($env:DOCKER_HUB_MIRRORS) { $env:DOCKER_HUB_MIRRORS } else { "daocloud,aliyun,tuna" }
+$lines += "      - DOCKER_HUB_MIRRORS=$dockerHubMirrors"
 $lines += "  environment:"
 $lines += "    - PORT=18789"
 $lines += '    - NODE_ENV=${OPENCLAW_NODE_ENV:-production}'

@@ -165,6 +165,67 @@ RUN mkdir -p "$HOME/.cargo" && \
         printf '[source.crates-io]\nreplace-with = "rsproxy"\n[source.rsproxy]\nregistry = "https://rsproxy.cn/crates.io-index"\n' > "$HOME/.cargo/config.toml"; \
     fi
 
+# 安装 Go
+ARG GO_VERSION=1.22.0
+ARG GOPROXY_MIRRORS=goproxy.cn,goproxy.io,direct
+RUN echo "[LOG] 检查 Go 是否已安装..." && \
+    command -v go > /dev/null 2>&1 && echo "[LOG] Go 已安装，跳过安装步骤..." || ( \
+        echo "[LOG] Go 未安装，开始安装 Go $GO_VERSION..." && \
+        curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xzf - && \
+        echo "[LOG] Go 安装完成..." \
+    )
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV GOPATH="$HOME/go"
+ENV PATH="$GOPATH/bin:${PATH}"
+RUN mkdir -p "$GOPATH" && \
+    GOPROXY_LIST="" && \
+    for mirror in $(echo "$GOPROXY_MIRRORS" | tr ',' ' '); do \
+        if [ "$mirror" = "goproxy.cn" ]; then \
+            GOPROXY_LIST="${GOPROXY_LIST}https://goproxy.cn,"; \
+        elif [ "$mirror" = "goproxy.io" ]; then \
+            GOPROXY_LIST="${GOPROXY_LIST}https://goproxy.io,"; \
+        elif [ "$mirror" = "aliyun" ]; then \
+            GOPROXY_LIST="${GOPROXY_LIST}https://mirrors.aliyun.com/goproxy/,"; \
+        elif [ "$mirror" = "direct" ]; then \
+            GOPROXY_LIST="${GOPROXY_LIST}direct,"; \
+        else \
+            GOPROXY_LIST="${GOPROXY_LIST}${mirror},"; \
+        fi; \
+    done && \
+    GOPROXY_LIST=$(echo "$GOPROXY_LIST" | sed 's/,$//') && \
+    go env -w GOPROXY="$GOPROXY_LIST" && \
+    go env -w GOSUMDB=sum.golang.org && \
+    echo "[LOG] GOPROXY 配置完成: $(go env GOPROXY)"
+
+# 配置 Docker Hub 镜像加速
+ARG DOCKER_HUB_MIRRORS=daocloud,aliyun,tuna
+USER root
+RUN echo "[LOG] 配置 Docker Hub 镜像加速..." && \
+    mkdir -p /etc/docker && \
+    MIRROR_JSON="[" && \
+    for mirror in $(echo "$DOCKER_HUB_MIRRORS" | tr ',' ' '); do \
+        if [ "$mirror" = "daocloud" ]; then \
+            URL="https://docker.m.daocloud.io"; \
+        elif [ "$mirror" = "aliyun" ]; then \
+            URL="https://registry.cn-hangzhou.aliyuncs.com"; \
+        elif [ "$mirror" = "tuna" ]; then \
+            URL="https://docker.mirrors.tuna.tsinghua.edu.cn"; \
+        elif [ "$mirror" = "ustc" ]; then \
+            URL="https://docker.mirrors.ustc.edu.cn"; \
+        else \
+            URL="$mirror"; \
+        fi; \
+        if [ "$MIRROR_JSON" = "[" ]; then \
+            MIRROR_JSON="${MIRROR_JSON}\"$URL\""; \
+        else \
+            MIRROR_JSON="${MIRROR_JSON}, \"$URL\""; \
+        fi; \
+    done && \
+    MIRROR_JSON="${MIRROR_JSON}]" && \
+    printf '{\n  "registry-mirrors": %s\n}\n' "$MIRROR_JSON" > /etc/docker/daemon.json && \
+    echo "[LOG] Docker Hub 镜像加速配置完成: $MIRROR_JSON"
+USER node
+
 # 配置缓存相关环境变量
 ENV npm_config_cache="$HOME/.npm"
 ENV pip_cache_dir="$HOME/.cache/pip"
