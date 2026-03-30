@@ -6,7 +6,7 @@
 
 ## 版本
 
-- 当前版本：v2026.3.25
+- 当前版本：v2026.3.30
 
 ## 项目概述
 
@@ -20,6 +20,10 @@
 - **易于管理**：提供启动、停止、重启和权限修复脚本
 - **特权模式**：增强权限以获得更好的性能
 - **健康检查**：自动监控容器健康状态
+- **可配置基础镜像**：通过 .env 支持自定义基础镜像
+- **OpenClaw 版本控制**：指定 OpenClaw 安装版本
+- **多语言支持**：Rust、Go、Python 国内镜像加速
+- **Docker Hub 镜像加速**：支持多镜像源配置
 
 ## 环境要求
 
@@ -58,13 +62,13 @@
 ```
 openclaw_docker/
 ├── .env                    # 环境变量配置文件
-├── .gitconfig              # 带镜像的 Git 配置
 ├── .npmrc                  # 带镜像的 npm 配置
 ├── Dockerfile              # Docker 构建文件
 ├── docker-compose.yml      # Docker Compose 配置（动态生成）
 ├── sources.list            # 带国内镜像的 APT 源
 ├── configure_sources.sh    # APT 源配置脚本
 ├── update_hosts.sh         # GitHub Hosts 更新脚本
+├── entrypoint.sh           # 容器入口脚本
 ├── generate-compose.sh     # 生成 docker-compose.yml（Linux/Mac）
 ├── generate-compose.ps1    # 生成 docker-compose.yml（Windows）
 ├── fix_permissions.sh      # 修复目录权限（Linux/Mac）
@@ -84,16 +88,19 @@ openclaw_docker/
 通过 `.env` 文件配置服务：
 
 ```env
+# 基础镜像配置
+BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
+
+# OpenClaw 版本配置
+OPENCLAW_VERSION=latest
+
 # 服务配置
-# 格式: GATEWAY_SERVICES=service1,service2,service3
 GATEWAY_SERVICES=serv,coder1,coder2,coder3
 
 # 端口配置
-# 格式: GATEWAY_PORTS=service1:port1,service2:port2
 GATEWAY_PORTS=serv:42700
 
 # 额外 volumes 配置
-# 格式: GATEWAY_VOLUMES=service1:/host/path1:/container/path1,service2:/host/path2:/container/path2
 GATEWAY_VOLUMES=
 ```
 
@@ -101,16 +108,23 @@ GATEWAY_VOLUMES=
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
+| `BASE_IMAGE` | Docker 基础镜像地址 | `ghcr.m.daocloud.io/openclaw/openclaw:latest` |
+| `OPENCLAW_VERSION` | OpenClaw 安装版本 | `latest` |
 | `GATEWAY_SERVICES` | 服务列表，逗号分隔 | `serv,coder1,coder2,coder3` |
 | `GATEWAY_PORTS` | 端口映射，格式：`服务名:端口` | 空 |
 | `GATEWAY_VOLUMES` | 额外卷映射，格式：`服务名:主机路径:容器路径` | 空 |
-| `CONTAINER_MEM_LIMIT` | 容器内存限制 | `2g` |
+| `CONTAINER_MEM_LIMIT` | 容器内存限制 | `8g` |
 | `CONTAINER_RESTART_POLICY` | 容器重启策略 | `unless-stopped` |
+| `CONTAINER_HOME` | 容器内用户主目录 | `/home/node` |
 | `TZ` | 时区设置 | `Asia/Shanghai` |
 | `npm_config_registry` | npm 镜像源 | `https://registry.npmmirror.com/` |
 | `pnpm_config_registry` | pnpm 镜像源 | `https://registry.npmmirror.com/` |
-| `pip_config_index_url` | pip 镜像源 | `https://pypi.tuna.tsinghua.edu.cn/simple` |
-| `git_config_url` | git 镜像源 | `https://github.com.cnpmjs.org` |
+| `PIP_MIRROR` | pip 镜像源 (tuna/aliyun/douban) | `tuna` |
+| `RUST_VERSION` | Rust 版本 | `stable` |
+| `RUST_CRATES_MIRROR` | Rust crates.io 镜像 (tuna/ustc/rsproxy) | `tuna` |
+| `GO_VERSION` | Go 版本 | `1.22.0` |
+| `GOPROXY_MIRRORS` | Go 模块代理镜像 | `goproxy.cn,goproxy.io,direct` |
+| `DOCKER_HUB_MIRRORS` | Docker Hub 镜像加速 | `daocloud,aliyun,tuna` |
 | `LOG_MAX_SIZE` | 日志文件最大大小 | `10m` |
 | `LOG_MAX_FILE` | 日志文件最大数量 | `3` |
 | `HEALTHCHECK_INTERVAL` | 健康检查间隔 | `30s` |
@@ -122,11 +136,13 @@ GATEWAY_VOLUMES=
 
 ### Dockerfile
 
-- 使用 Node.js 22 slim 镜像作为基础
+- 支持通过 BASE_IMAGE 参数自定义基础镜像
+- 检测并创建 node 用户（如不存在）
 - 使用 apt 安装依赖以加快下载速度
-- 使用国内镜像源加速 apt、npm、pip 和 git
-- 使用 npm 全局安装 OpenClaw
-- 包含 GitHub Hosts 更新脚本（update_hosts.sh），每5小时执行一次
+- 使用国内镜像源加速 apt、npm、pip、Rust 和 Go
+- 支持配置 OpenClaw 安装版本
+- 包含 GitHub Hosts 更新脚本和定时任务
+- 包含入口脚本自动安装 OpenClaw
 
 ## 脚本使用
 
@@ -197,6 +213,20 @@ GATEWAY_PORTS=serv:42700,coder1:42800
 ```env
 GATEWAY_SERVICES=serv
 GATEWAY_VOLUMES=serv:/data/volumes:/data,serv:/opt/config:/app/config
+```
+
+### 示例 4：指定 OpenClaw 版本
+
+```env
+# 安装指定版本的 OpenClaw
+OPENCLAW_VERSION=2026.3.24
+```
+
+### 示例 5：使用官方基础镜像
+
+```env
+# 使用官方 OpenClaw 镜像
+BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
 ```
 
 ## 访问地址

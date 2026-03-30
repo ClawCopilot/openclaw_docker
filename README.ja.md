@@ -6,7 +6,7 @@
 
 ## バージョン
 
-- 現在のバージョン：v2026.3.25
+- 現在のバージョン：v2026.3.30
 
 ## プロジェクト概要
 
@@ -20,6 +20,10 @@
 - **簡単な管理**：起動、停止、再起動、権限修正スクリプトを提供
 - **特権モード**：より良いパフォーマンスのための権限強化
 - **ヘルスチェック**：コンテナの自動健康モニタリング
+- **設定可能なベースイメージ**：.env でカスタムベースイメージをサポート
+- **OpenClaw バージョン制御**：OpenClaw のインストールバージョンを指定
+- **多言語サポート**：Rust、Go、Python の国内ミラー加速
+- **Docker Hub ミラー加速**：複数ミラーソースのサポート
 
 ## 前提条件
 
@@ -58,13 +62,13 @@
 ```
 openclaw_docker/
 ├── .env                    # 環境変数設定ファイル
-├── .gitconfig              # ミラー付きの Git 設定
 ├── .npmrc                  # ミラー付きの npm 設定
 ├── Dockerfile              # Docker ビルドファイル
 ├── docker-compose.yml      # Docker Compose 設定（動的生成）
 ├── sources.list            # 国内ミラー付きの APT ソース
 ├── configure_sources.sh    # APT ソース設定スクリプト
 ├── update_hosts.sh         # GitHub Hosts 更新スクリプト
+├── entrypoint.sh           # コンテナエントリポイントスクリプト
 ├── generate-compose.sh     # docker-compose.yml 生成（Linux/Mac）
 ├── generate-compose.ps1    # docker-compose.yml 生成（Windows）
 ├── fix_permissions.sh      # ディレクトリ権限修正（Linux/Mac）
@@ -84,16 +88,19 @@ openclaw_docker/
 `.env` ファイルでサービスを設定します：
 
 ```env
+# ベースイメージ設定
+BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
+
+# OpenClaw バージョン設定
+OPENCLAW_VERSION=latest
+
 # サービス設定
-# 形式: GATEWAY_SERVICES=service1,service2,service3
 GATEWAY_SERVICES=serv,coder1,coder2,coder3
 
 # ポート設定
-# 形式: GATEWAY_PORTS=service1:port1,service2:port2
 GATEWAY_PORTS=serv:42700
 
 # 追加ボリューム設定
-# 形式: GATEWAY_VOLUMES=service1:/host/path1:/container/path1,service2:/host/path2:/container/path2
 GATEWAY_VOLUMES=
 ```
 
@@ -101,16 +108,23 @@ GATEWAY_VOLUMES=
 
 | 変数 | 説明 | デフォルト |
 |------|------|------------|
+| `BASE_IMAGE` | Docker ベースイメージアドレス | `ghcr.m.daocloud.io/openclaw/openclaw:latest` |
+| `OPENCLAW_VERSION` | OpenClaw インストールバージョン | `latest` |
 | `GATEWAY_SERVICES` | サービスリスト、カンマ区切り | `serv,coder1,coder2,coder3` |
 | `GATEWAY_PORTS` | ポートマッピング、形式：`サービス:ポート` | 空 |
 | `GATEWAY_VOLUMES` | 追加ボリュームマッピング、形式：`サービス:ホストパス:コンテナパス` | 空 |
-| `CONTAINER_MEM_LIMIT` | コンテナのメモリ制限 | `2g` |
+| `CONTAINER_MEM_LIMIT` | コンテナのメモリ制限 | `8g` |
 | `CONTAINER_RESTART_POLICY` | コンテナの再起動ポリシー | `unless-stopped` |
+| `CONTAINER_HOME` | コンテナ内のユーザーホームディレクトリ | `/home/node` |
 | `TZ` | タイムゾーン設定 | `Asia/Shanghai` |
 | `npm_config_registry` | npm ミラーソース | `https://registry.npmmirror.com/` |
 | `pnpm_config_registry` | pnpm ミラーソース | `https://registry.npmmirror.com/` |
-| `pip_config_index_url` | pip ミラーソース | `https://pypi.tuna.tsinghua.edu.cn/simple` |
-| `git_config_url` | git ミラーソース | `https://github.com.cnpmjs.org` |
+| `PIP_MIRROR` | pip ミラーソース (tuna/aliyun/douban) | `tuna` |
+| `RUST_VERSION` | Rust バージョン | `stable` |
+| `RUST_CRATES_MIRROR` | Rust crates.io ミラー (tuna/ustc/rsproxy) | `tuna` |
+| `GO_VERSION` | Go バージョン | `1.22.0` |
+| `GOPROXY_MIRRORS` | Go モジュールプロキシミラー | `goproxy.cn,goproxy.io,direct` |
+| `DOCKER_HUB_MIRRORS` | Docker Hub ミラー加速 | `daocloud,aliyun,tuna` |
 | `LOG_MAX_SIZE` | ログファイルの最大サイズ | `10m` |
 | `LOG_MAX_FILE` | ログファイルの最大数 | `3` |
 | `HEALTHCHECK_INTERVAL` | ヘルスチェック間隔 | `30s` |
@@ -122,11 +136,13 @@ GATEWAY_VOLUMES=
 
 ### Dockerfile
 
-- ベースとして Node.js 22 slim イメージを使用
+- BASE_IMAGE 引数でカスタムベースイメージをサポート
+- node ユーザーが存在しない場合は作成
 - ダウンロードを高速化するために apt を使用して依存関係をインストール
-- apt、npm、pip、git の高速化のために国内ミラーソースを使用
-- npm を使用して OpenClaw をグローバルにインストール
-- GitHub Hosts 更新スクリプト（update_hosts.sh）を含み、5時間ごとに実行
+- apt、npm、pip、Rust、Go の高速化のために国内ミラーソースを使用
+- 設定可能な OpenClaw インストールバージョンをサポート
+- GitHub Hosts 更新スクリプトと cron ジョブを含む
+- OpenClaw を自動インストールするエントリポイントスクリプトを含む
 
 ## スクリプトの使用
 
@@ -197,6 +213,20 @@ GATEWAY_PORTS=serv:42700,coder1:42800
 ```env
 GATEWAY_SERVICES=serv
 GATEWAY_VOLUMES=serv:/data/volumes:/data,serv:/opt/config:/app/config
+```
+
+### 例 4：OpenClaw バージョンの指定
+
+```env
+# 特定のバージョンの OpenClaw をインストール
+OPENCLAW_VERSION=2026.3.24
+```
+
+### 例 5：公式ベースイメージの使用
+
+```env
+# 公式 OpenClaw イメージを使用
+BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
 ```
 
 ## アクセスアドレス

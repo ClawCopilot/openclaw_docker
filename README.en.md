@@ -6,7 +6,7 @@
 
 ## Version
 
-- Current version: v2026.3.25
+- Current version: v2026.3.30
 
 ## Overview
 
@@ -20,6 +20,10 @@ This project provides a Docker-based deployment solution for OpenClaw with multi
 - **Easy management**: Provided start, stop, restart, and permission fix scripts
 - **Privileged mode**: Enhanced permissions for better performance
 - **Health checks**: Automatic health monitoring for containers
+- **Configurable base image**: Support custom base images via .env
+- **OpenClaw version control**: Specify OpenClaw installation version
+- **Multi-language support**: Rust, Go, Python with domestic mirrors
+- **Docker Hub mirror acceleration**: Multiple mirror sources support
 
 ## Prerequisites
 
@@ -58,13 +62,13 @@ This project provides a Docker-based deployment solution for OpenClaw with multi
 ```
 openclaw_docker/
 ├── .env                    # Environment variable configuration file
-├── .gitconfig              # Git configuration with mirror
 ├── .npmrc                  # npm configuration with mirror
 ├── Dockerfile              # Docker build file
 ├── docker-compose.yml      # Docker Compose configuration (dynamically generated)
 ├── sources.list            # APT sources with domestic mirrors
 ├── configure_sources.sh    # APT sources configuration script
 ├── update_hosts.sh         # GitHub Hosts update script
+├── entrypoint.sh           # Container entrypoint script
 ├── generate-compose.sh     # Generate docker-compose.yml (Linux/Mac)
 ├── generate-compose.ps1    # Generate docker-compose.yml (Windows)
 ├── fix_permissions.sh      # Fix directory permissions (Linux/Mac)
@@ -84,16 +88,19 @@ openclaw_docker/
 Configure services through the `.env` file:
 
 ```env
+# Base image configuration
+BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
+
+# OpenClaw version configuration
+OPENCLAW_VERSION=latest
+
 # Service configuration
-# Format: GATEWAY_SERVICES=service1,service2,service3
 GATEWAY_SERVICES=serv,coder1,coder2,coder3
 
 # Port configuration
-# Format: GATEWAY_PORTS=service1:port1,service2:port2
 GATEWAY_PORTS=serv:42700
 
 # Additional volumes configuration
-# Format: GATEWAY_VOLUMES=service1:/host/path1:/container/path1,service2:/host/path2:/container/path2
 GATEWAY_VOLUMES=
 ```
 
@@ -101,16 +108,23 @@ GATEWAY_VOLUMES=
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `BASE_IMAGE` | Docker base image address | `ghcr.m.daocloud.io/openclaw/openclaw:latest` |
+| `OPENCLAW_VERSION` | OpenClaw installation version | `latest` |
 | `GATEWAY_SERVICES` | Service list, comma-separated | `serv,coder1,coder2,coder3` |
 | `GATEWAY_PORTS` | Port mapping, format: `service:port` | Empty |
 | `GATEWAY_VOLUMES` | Additional volume mapping, format: `service:host_path:container_path` | Empty |
-| `CONTAINER_MEM_LIMIT` | Container memory limit | `2g` |
+| `CONTAINER_MEM_LIMIT` | Container memory limit | `8g` |
 | `CONTAINER_RESTART_POLICY` | Container restart policy | `unless-stopped` |
+| `CONTAINER_HOME` | Container user home directory | `/home/node` |
 | `TZ` | Timezone setting | `Asia/Shanghai` |
 | `npm_config_registry` | npm mirror source | `https://registry.npmmirror.com/` |
 | `pnpm_config_registry` | pnpm mirror source | `https://registry.npmmirror.com/` |
-| `pip_config_index_url` | pip mirror source | `https://pypi.tuna.tsinghua.edu.cn/simple` |
-| `git_config_url` | git mirror source | `https://github.com.cnpmjs.org` |
+| `PIP_MIRROR` | pip mirror source (tuna/aliyun/douban) | `tuna` |
+| `RUST_VERSION` | Rust version | `stable` |
+| `RUST_CRATES_MIRROR` | Rust crates.io mirror (tuna/ustc/rsproxy) | `tuna` |
+| `GO_VERSION` | Go version | `1.22.0` |
+| `GOPROXY_MIRRORS` | Go module proxy mirrors | `goproxy.cn,goproxy.io,direct` |
+| `DOCKER_HUB_MIRRORS` | Docker Hub mirror acceleration | `daocloud,aliyun,tuna` |
 | `LOG_MAX_SIZE` | Maximum log file size | `10m` |
 | `LOG_MAX_FILE` | Maximum number of log files | `3` |
 | `HEALTHCHECK_INTERVAL` | Health check interval | `30s` |
@@ -122,11 +136,13 @@ GATEWAY_VOLUMES=
 
 ### Dockerfile
 
-- Uses Node.js 22 slim image as base
+- Supports custom base images via BASE_IMAGE argument
+- Checks and creates node user if not exists
 - Installs dependencies using apt for faster downloads
-- Uses domestic mirror sources for apt, npm, pip, and git
-- Globally installs OpenClaw using npm
-- Includes GitHub Hosts update script (update_hosts.sh) with 5-hour cron job
+- Uses domestic mirror sources for apt, npm, pip, Rust, and Go
+- Supports configurable OpenClaw version installation
+- Includes GitHub Hosts update script with cron job
+- Includes entrypoint script for automatic OpenClaw installation
 
 ## Script Usage
 
@@ -197,6 +213,20 @@ GATEWAY_PORTS=serv:42700,coder1:42800
 ```env
 GATEWAY_SERVICES=serv
 GATEWAY_VOLUMES=serv:/data/volumes:/data,serv:/opt/config:/app/config
+```
+
+### Example 4: Specify OpenClaw Version
+
+```env
+# Install specific OpenClaw version
+OPENCLAW_VERSION=2026.3.24
+```
+
+### Example 5: Use Official Base Image
+
+```env
+# Use official OpenClaw image
+BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
 ```
 
 ## Access Addresses

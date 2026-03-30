@@ -8,7 +8,7 @@
 
 ## Version
 
-- Current version: v2026.3.25
+- Current version: v2026.3.30
 
 ## Overview
 
@@ -22,6 +22,10 @@ This project provides a Docker-based deployment solution for OpenClaw with multi
 - **Easy management**: Provided start, stop, restart, and permission fix scripts
 - **Privileged mode**: Enhanced permissions for better performance
 - **Health checks**: Automatic health monitoring for containers
+- **Configurable base image**: Support custom base images via .env
+- **OpenClaw version control**: Specify OpenClaw installation version
+- **Multi-language support**: Rust, Go, Python with domestic mirrors
+- **Docker Hub mirror acceleration**: Multiple mirror sources support
 
 ## Quick Start
 
@@ -43,6 +47,12 @@ chmod +x *.sh
 Configure services through the `.env` file:
 
 ```env
+# Base image configuration
+BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
+
+# OpenClaw version
+OPENCLAW_VERSION=latest
+
 # Service configuration
 GATEWAY_SERVICES=serv,coder1,coder2,coder3
 
