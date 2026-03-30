@@ -11,7 +11,9 @@ if ! command -v openclaw &> /dev/null; then
     npm config set prefix "$HOME/.npm-global"
     export PATH="$HOME/.npm-global/bin:$PATH"
     
-    npm install -g openclaw@latest
+    OPENCLAW_VERSION="${OPENCLAW_VERSION:-latest}"
+    echo "[ENTRYPOINT] 安装 OpenClaw@$OPENCLAW_VERSION..."
+    npm install -g "openclaw@$OPENCLAW_VERSION"
     if [ $? -eq 0 ]; then
         echo "[ENTRYPOINT] OpenClaw 安装成功"
     else

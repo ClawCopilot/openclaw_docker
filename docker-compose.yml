@@ -13,12 +13,14 @@ x-base-service:
       - GO_VERSION=${GO_VERSION:-1.22.0}
       - GOPROXY_MIRRORS=${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}
       - DOCKER_HUB_MIRRORS=${DOCKER_HUB_MIRRORS:-daocloud,aliyun,tuna}
+      - OPENCLAW_VERSION=${OPENCLAW_VERSION:-latest}
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
     - npm_config_registry=${npm_config_registry:-https://registry.npmmirror.com/}
     - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}
     - TZ=${TZ:-Asia/Shanghai}
+    - OPENCLAW_VERSION=${OPENCLAW_VERSION:-latest}
   restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}
   logging:
     driver: json-file

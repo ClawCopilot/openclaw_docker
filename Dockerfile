@@ -231,10 +231,11 @@ RUN echo "[LOG] 配置 Docker Hub 镜像加速..." && \
 USER node
 
 # 尝试安装 OpenClaw（如果基础镜像未包含）
+ARG OPENCLAW_VERSION=latest
 RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
     command -v openclaw > /dev/null 2>&1 && echo "[LOG] OpenClaw 已安装，跳过安装步骤..." || ( \
-        echo "[LOG] OpenClaw 未安装，开始安装 OpenClaw..." && \
-        npm install -g openclaw@latest && \
+        echo "[LOG] OpenClaw 未安装，开始安装 OpenClaw@$OPENCLAW_VERSION..." && \
+        npm install -g "openclaw@$OPENCLAW_VERSION" && \
         echo "[LOG] OpenClaw 安装完成..." \
     )
 

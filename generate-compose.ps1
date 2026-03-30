@@ -99,12 +99,15 @@ $goproxyMirrors = if ($env:GOPROXY_MIRRORS) { $env:GOPROXY_MIRRORS } else { "gop
 $lines += "      - GOPROXY_MIRRORS=$goproxyMirrors"
 $dockerHubMirrors = if ($env:DOCKER_HUB_MIRRORS) { $env:DOCKER_HUB_MIRRORS } else { "daocloud,aliyun,tuna" }
 $lines += "      - DOCKER_HUB_MIRRORS=$dockerHubMirrors"
+$openclawVersion = if ($env:OPENCLAW_VERSION) { $env:OPENCLAW_VERSION } else { "latest" }
+$lines += "      - OPENCLAW_VERSION=$openclawVersion"
 $lines += "  environment:"
 $lines += "    - PORT=18789"
 $lines += '    - NODE_ENV=${OPENCLAW_NODE_ENV:-production}'
 $lines += '    - npm_config_registry=${npm_config_registry:-https://registry.npmmirror.com/}'
 $lines += '    - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}'
 $lines += '    - TZ=${TZ:-Asia/Shanghai}'
+$lines += "    - OPENCLAW_VERSION=$openclawVersion"
 $lines += '  restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}'
 $lines += "  logging:"
 $lines += "    driver: json-file"
