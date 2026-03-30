@@ -38,24 +38,31 @@ RUN echo "[LOG] 配置 wget 镜像源..." && \
     echo "[LOG] 清理临时文件..." && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# 检查并创建 node 用户（如果基础镜像未包含）
+RUN echo "[LOG] 检查 node 用户是否存在..." && \
+    id node > /dev/null 2>&1 && echo "[LOG] node 用户已存在" || ( \
+        echo "[LOG] node 用户不存在，开始创建..." && \
+        useradd -m -s /bin/bash node && \
+        echo "[LOG] node 用户创建完成" \
+    )
+
 # 复制 GitHub Hosts 更新脚本到用户目录
-COPY update_hosts.sh /root/update_hosts.sh
-RUN chmod +x /root/update_hosts.sh
+COPY update_hosts.sh /home/node/update_hosts.sh
+USER root
+RUN chmod +x /home/node/update_hosts.sh && chown node:node /home/node/update_hosts.sh
 
 # 首次执行脚本
-RUN /root/update_hosts.sh
+RUN /home/node/update_hosts.sh
 
-# 设置定时任务（每5小时执行一次）
-RUN echo "0 */5 * * * /root/update_hosts.sh" > /etc/cron.d/update_hosts && \
+# 设置定时任务（每3小时执行一次）
+USER root
+RUN echo "0 */3 * * * node /home/node/update_hosts.sh" > /etc/cron.d/update_hosts && \
     chmod 644 /etc/cron.d/update_hosts
 
 # 清理临时文件
 RUN echo "[LOG] 清理临时文件..." && \
     rm -rf /tmp/* /var/tmp/*    
 
-# 配置时区
-ARG TZ=Asia/Shanghai
-ENV TZ=${TZ}
 RUN apt-get update -y --allow-unauthenticated && \
     apt-get install -y --no-install-recommends tzdata && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
@@ -87,6 +94,9 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
 # 切换到 node 用户    
 USER node    
 
+# 配置时区
+ARG TZ=Asia/Shanghai
+ENV TZ=${TZ}
 
 # 安装 NodeJS 24 LTS
 RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
