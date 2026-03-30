@@ -130,16 +130,6 @@ RUN if [ -f "$HOME/.npmrc" ]; then \
         cp /tmp/.npmrc "$HOME/.npmrc"; \
     fi
 
-# 复制 git 配置文件（如果存在则追加，不存在则复制）
-COPY .gitconfig /tmp/.gitconfig
-RUN if [ -f "$HOME/.gitconfig" ]; then \
-        echo "[LOG] .gitconfig 文件已存在，追加内容..." && \
-        cat /tmp/.gitconfig >> "$HOME/.gitconfig"; \
-    else \
-        echo "[LOG] .gitconfig 文件不存在，直接复制..." && \
-        cp /tmp/.gitconfig "$HOME/.gitconfig"; \
-    fi
-
 # 配置 Python pip 国内镜像源
 ARG PIP_MIRROR=tuna
 RUN mkdir -p "$HOME/.config/pip" && \
