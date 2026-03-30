@@ -78,6 +78,7 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     git \
     vim \
     sudo \
+    supervisor \
     python3 \
     python3-pip \
     curl \
