@@ -4,6 +4,11 @@
 [![Language](https://img.shields.io/badge/Language-中文-red)](./README.zh.md)
 [![Language](https://img.shields.io/badge/Language-日本語-green)](./README.ja.md)
 
+## 公式ウェブサイト
+
+- [https://ggsheng.com](https://ggsheng.com)
+- [https://ggsheng.org](https://ggsheng.org)
+
 ## バージョン
 
 - 現在のバージョン：v2026.3.30
