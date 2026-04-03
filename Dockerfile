@@ -171,7 +171,7 @@ RUN mkdir -p "$HOME/.cargo" && \
     fi
 
 # 安装 Go
-ARG GO_VERSION=1.25.0
+ARG GO_VERSION=1.25.8
 ARG GOPROXY_MIRRORS=goproxy.cn,goproxy.io,direct
 USER root
 RUN echo "[LOG] 检查 Go 是否已安装..." && \
