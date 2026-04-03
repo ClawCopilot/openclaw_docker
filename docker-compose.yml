@@ -43,47 +43,7 @@ x-base-service:
 
 # 服务配置
 services:
-  # 网关 1 - sme1
-  sme1:
-    <<: *base-service
-    container_name: sme1
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    deploy:
-      resources:
-        limits:
-          memory: 8g
-    volumes:
-      - ./sme1/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
-      - ./sme1/.ssh:/home/node/.ssh:U,z                    # Config ssh
-      - ./sme1/.openclaw:/home/node/.openclaw:U,z          # Config and data
-      - ./sme1/workspace:/home/node/workspace:U,z          # Agent workspace
-      - ./sme1/apps:/home/node/apps:U,z                    # Config apps
-      - ./share:/home/node/share:U,z                              # Config share
-    environment:
-      - GATEWAY_ID=sme1
-
-  # 网关 2 - sme2
-  sme2:
-    <<: *base-service
-    container_name: sme2
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    deploy:
-      resources:
-        limits:
-          memory: 8g
-    volumes:
-      - ./sme2/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
-      - ./sme2/.ssh:/home/node/.ssh:U,z                    # Config ssh
-      - ./sme2/.openclaw:/home/node/.openclaw:U,z          # Config and data
-      - ./sme2/workspace:/home/node/workspace:U,z          # Agent workspace
-      - ./sme2/apps:/home/node/apps:U,z                    # Config apps
-      - ./share:/home/node/share:U,z                              # Config share
-    environment:
-      - GATEWAY_ID=sme2
-
-  # 网关 3 - serv
+  # 网关 1 - serv
   serv:
     <<: *base-service
     container_name: serv
@@ -102,4 +62,64 @@ services:
       - ./share:/home/node/share:U,z                              # Config share
     environment:
       - GATEWAY_ID=serv
+
+  # 网关 2 - coder1
+  coder1:
+    <<: *base-service
+    container_name: coder1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+    volumes:
+      - ./coder1/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./coder1/.ssh:/home/node/.ssh:U,z                    # Config ssh
+      - ./coder1/.openclaw:/home/node/.openclaw:U,z          # Config and data
+      - ./coder1/workspace:/home/node/workspace:U,z          # Agent workspace
+      - ./coder1/apps:/home/node/apps:U,z                    # Config apps
+      - ./share:/home/node/share:U,z                              # Config share
+    environment:
+      - GATEWAY_ID=coder1
+
+  # 网关 3 - coder2
+  coder2:
+    <<: *base-service
+    container_name: coder2
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+    volumes:
+      - ./coder2/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./coder2/.ssh:/home/node/.ssh:U,z                    # Config ssh
+      - ./coder2/.openclaw:/home/node/.openclaw:U,z          # Config and data
+      - ./coder2/workspace:/home/node/workspace:U,z          # Agent workspace
+      - ./coder2/apps:/home/node/apps:U,z                    # Config apps
+      - ./share:/home/node/share:U,z                              # Config share
+    environment:
+      - GATEWAY_ID=coder2
+
+  # 网关 4 - coder3
+  coder3:
+    <<: *base-service
+    container_name: coder3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+    volumes:
+      - ./coder3/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./coder3/.ssh:/home/node/.ssh:U,z                    # Config ssh
+      - ./coder3/.openclaw:/home/node/.openclaw:U,z          # Config and data
+      - ./coder3/workspace:/home/node/workspace:U,z          # Agent workspace
+      - ./coder3/apps:/home/node/apps:U,z                    # Config apps
+      - ./share:/home/node/share:U,z                              # Config share
+    environment:
+      - GATEWAY_ID=coder3
 

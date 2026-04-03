@@ -141,22 +141,27 @@ RUN mkdir -p "$HOME/.config/pip" && \
         printf '[global]\nindex-url = https://pypi.doubanio.com/simple/\ntrusted-host = pypi.doubanio.com\n' > "$HOME/.config/pip/pip.conf"; \
     fi
 
-# 安装 Rust
+# 安装 Rust（安装失败不影响容器创建）
 ARG RUST_VERSION=stable
 ARG RUSTUP_MIRROR=tuna
 RUN echo "[LOG] 检查 Rust 是否已安装..." && \
-    command -v rustc > /dev/null 2>&1 && echo "[LOG] Rust 已安装，跳过安装步骤..." || ( \
+    if command -v rustc > /dev/null 2>&1; then \
+        echo "[LOG] Rust 已安装，跳过安装步骤..."; \
+    else \
         echo "[LOG] Rust 未安装，开始安装 Rust $RUST_VERSION..." && \
-        if [ "$RUSTUP_MIRROR" = "tuna" ]; then \
-            export RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup" && \
-            export RUSTUP_UPDATE_ROOT="https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup"; \
-        elif [ "$RUSTUP_MIRROR" = "ustc" ]; then \
-            export RUSTUP_DIST_SERVER="https://mirrors.ustc.edu.cn/rustup" && \
-            export RUSTUP_UPDATE_ROOT="https://mirrors.ustc.edu.cn/rustup/rustup"; \
-        fi && \
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $RUST_VERSION && \
-        echo "[LOG] Rust 安装完成..." \
-    )
+        ( \
+            set -e && \
+            if [ "$RUSTUP_MIRROR" = "tuna" ]; then \
+                export RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup" && \
+                export RUSTUP_UPDATE_ROOT="https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup"; \
+            elif [ "$RUSTUP_MIRROR" = "ustc" ]; then \
+                export RUSTUP_DIST_SERVER="https://mirrors.ustc.edu.cn/rustup" && \
+                export RUSTUP_UPDATE_ROOT="https://mirrors.ustc.edu.cn/rustup/rustup"; \
+            fi && \
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $RUST_VERSION && \
+            echo "[LOG] Rust 安装完成..." \
+        ) || echo "[WARN] Rust 安装失败，跳过继续构建..."; \
+    fi
 ENV PATH="$HOME/.cargo/bin:${PATH}"
 
 # 配置 Rust crates.io 国内镜像源
@@ -170,21 +175,26 @@ RUN mkdir -p "$HOME/.cargo" && \
         printf '[source.crates-io]\nreplace-with = "rsproxy"\n[source.rsproxy]\nregistry = "https://rsproxy.cn/crates.io-index"\n' > "$HOME/.cargo/config.toml"; \
     fi
 
-# 安装 Go
+# 安装 Go（安装失败不影响容器创建）
 ARG GO_VERSION=1.25.8
 ARG GOPROXY_MIRRORS=goproxy.cn,goproxy.io,direct
 USER root
 RUN echo "[LOG] 检查 Go 是否已安装..." && \
-    command -v go > /dev/null 2>&1 && echo "[LOG] Go 已安装，跳过安装步骤..." || ( \
+    if command -v go > /dev/null 2>&1; then \
+        echo "[LOG] Go 已安装，跳过安装步骤..."; \
+    else \
         echo "[LOG] Go 未安装，开始安装 Go $GO_VERSION..." && \
-        GO_DOWNLOAD_URL="https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
-        curl -fsSL --connect-timeout 10 "$GO_DOWNLOAD_URL" -o /tmp/go.tar.gz || \
-        curl -fsSL "https://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz || \
-        curl -fsSL "https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz && \
-        tar -C /usr/local -xzf /tmp/go.tar.gz && \
-        rm -f /tmp/go.tar.gz && \
-        echo "[LOG] Go 安装完成..." \
-    )
+        ( \
+            set -e && \
+            GO_DOWNLOAD_URL="https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+            curl -fsSL --connect-timeout 10 "$GO_DOWNLOAD_URL" -o /tmp/go.tar.gz || \
+            curl -fsSL "https://mirrors.ustc.edu.cn/golang/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz || \
+            curl -fsSL "https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz && \
+            tar -C /usr/local -xzf /tmp/go.tar.gz && \
+            rm -f /tmp/go.tar.gz && \
+            echo "[LOG] Go 安装完成..." \
+        ) || echo "[WARN] Go 安装失败，跳过继续构建..."; \
+    fi
 USER node
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="$HOME/go"
@@ -253,39 +263,44 @@ USER root
 RUN chmod +x /usr/local/bin/entrypoint.sh
 USER node
 
-# 安装 brew（使用国内镜像源）
+# 安装 brew（使用国内镜像源，安装失败不影响容器创建）
 RUN echo "[LOG] 检查 brew 是否已安装..." && \
-    command -v brew > /dev/null 2>&1 && echo "[LOG] brew 已安装，跳过安装步骤..." || ( \
-        echo "[LOG] brew 未安装，开始安装 brew..." && \
-        # 安装必要的依赖
-        sudo apt-get update -y --allow-unauthenticated && \
-        sudo apt-get install -y --no-install-recommends build-essential curl git && \
-        # 创建 brew 安装目录并设置权限
-        echo "[LOG] 创建 brew 安装目录..." && \
-        sudo mkdir -p /home/linuxbrew/.linuxbrew && \
-        sudo chown -R node:node /home/linuxbrew && \
-        # 直接以 node 用户身份安装 brew
-        echo "[LOG] 从国内镜像源克隆 Homebrew 仓库..." && \
-        git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
-        echo "[LOG] 从国内镜像源克隆 Homebrew Core 仓库..." && \
-        git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
-        echo "[LOG] 创建 bin 目录..." && \
-        mkdir -p /home/linuxbrew/.linuxbrew/bin && \
-        echo "[LOG] 创建 brew 符号链接..." && \
-        ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
-        echo "[LOG] 配置 brew 环境变量..." && \
+    BREW_BIN="/home/linuxbrew/.linuxbrew/bin/brew" && \
+    if command -v brew > /dev/null 2>&1; then \
+        echo "[LOG] brew 已在 PATH 中，跳过安装步骤..."; \
+    elif [ -f "$BREW_BIN" ]; then \
+        echo "[LOG] brew 已安装但未配置 PATH，正在配置..." && \
         echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> "$HOME/.bashrc" && \
         echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> "$HOME/.bashrc" && \
-        export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
-        export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
-        echo "[LOG] 测试 brew 安装..." && \
-        brew --version && \
-        echo "[LOG] brew 安装完成..." \
-    ) && \
-    echo "[LOG] 配置 brew 镜像源..." && \
-    echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> "$HOME/.bashrc" && \
-    echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> "$HOME/.bashrc" && \
-    echo "[LOG] brew 镜像源配置完成..."
+        echo "[LOG] brew PATH 配置完成..."; \
+    else \
+        echo "[LOG] brew 未安装，开始安装 brew..." && \
+        ( \
+            set -e && \
+            sudo apt-get update -y --allow-unauthenticated && \
+            sudo apt-get install -y --no-install-recommends build-essential curl git && \
+            echo "[LOG] 创建 brew 安装目录..." && \
+            sudo rm -fr /home/linuxbrew/.linuxbrew && \
+            sudo mkdir -p /home/linuxbrew/.linuxbrew && \
+            sudo chown -R node:node /home/linuxbrew && \
+            echo "[LOG] 从国内镜像源克隆 Homebrew 仓库..." && \
+            git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git /home/linuxbrew/.linuxbrew/Homebrew && \
+            echo "[LOG] 从国内镜像源克隆 Homebrew Core 仓库..." && \
+            git clone --depth 1 https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git /home/linuxbrew/.linuxbrew/Homebrew/Library/Taps/homebrew/homebrew-core && \
+            echo "[LOG] 创建 bin 目录..." && \
+            mkdir -p /home/linuxbrew/.linuxbrew/bin && \
+            echo "[LOG] 创建 brew 符号链接..." && \
+            ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
+            echo "[LOG] 配置 brew 环境变量..." && \
+            echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> "$HOME/.bashrc" && \
+            echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles' >> "$HOME/.bashrc" && \
+            export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH" && \
+            export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles && \
+            echo "[LOG] 测试 brew 安装..." && \
+            brew --version && \
+            echo "[LOG] brew 安装完成..." \
+        ) || echo "[WARN] brew 安装失败，跳过继续构建..."; \
+    fi
 
 # 设置 brew 环境变量
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
@@ -297,77 +312,79 @@ ARG INSTALL_PODMAN=true
 ARG INSTALL_DOCKER_COMPOSE=false
 ARG DOCKER_COMPOSE_VERSION=latest
 
-# 安装 Docker（可选）
+# 安装 Docker（可选，安装失败不影响容器创建）
 USER root
 RUN if [ "$INSTALL_DOCKER" = "true" ]; then \
         echo "[LOG] 开始安装 Docker..." && \
-        apt-get update -y --allow-unauthenticated && \
-        apt-get install -y --no-install-recommends \
-            apt-transport-https \
-            ca-certificates \
-            curl \
-            gnupg \
-            lsb-release && \
-        # 使用国内镜像源安装 Docker
-        curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.aliyun.com/docker-ce/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-        apt-get update -y --allow-unauthenticated && \
-        apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io && \
-        # 配置 Docker 镜像加速
-        mkdir -p /etc/docker && \
-        # 将 node 用户添加到 docker 组，使其可以执行 docker 命令
-        usermod -aG docker node && \
-        echo "[LOG] Docker 安装完成，node 用户已添加到 docker 组"; \
+        ( \
+            set -e && \
+            apt-get update -y --allow-unauthenticated && \
+            apt-get install -y --no-install-recommends \
+                apt-transport-https \
+                ca-certificates \
+                curl \
+                gnupg \
+                lsb-release && \
+            curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.aliyun.com/docker-ce/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+            apt-get update -y --allow-unauthenticated && \
+            apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io && \
+            mkdir -p /etc/docker && \
+            usermod -aG docker node && \
+            echo "[LOG] Docker 安装完成，node 用户已添加到 docker 组" \
+        ) || echo "[WARN] Docker 安装失败，跳过继续构建..."; \
     else \
         echo "[LOG] 跳过 Docker 安装"; \
     fi
 
-# 安装 Podman（可选）
+# 安装 Podman（可选，安装失败不影响容器创建）
 RUN if [ "$INSTALL_PODMAN" = "true" ]; then \
         echo "[LOG] 开始安装 Podman..." && \
-        apt-get update -y --allow-unauthenticated && \
-        apt-get install -y --no-install-recommends \
-            podman \
-            slirp4netns \
-            fuse-overlayfs \
-            uidmap && \
-        # 配置 Podman rootless 模式支持
-        echo "node:100000:65536" >> /etc/subuid && \
-        echo "node:100000:65536" >> /etc/subgid && \
-        # 配置 Podman 镜像加速（使用 DOCKER_HUB_MIRRORS 的第一个镜像）
-        mkdir -p /etc/containers && \
-        MIRROR_URL=$(echo "$DOCKER_HUB_MIRRORS" | cut -d',' -f1) && \
-        case "$MIRROR_URL" in \
-            daocloud) MIRROR_URL="docker.m.daocloud.io" ;; \
-            aliyun) MIRROR_URL="registry.cn-hangzhou.aliyuncs.com" ;; \
-            tuna) MIRROR_URL="docker.mirrors.tuna.tsinghua.edu.cn" ;; \
-            ustc) MIRROR_URL="docker.mirrors.ustc.edu.cn" ;; \
-        esac && \
-        echo '[registries.search]' > /etc/containers/registries.conf && \
-        echo "registries = ['docker.io', '$MIRROR_URL']" >> /etc/containers/registries.conf && \
-        echo "[LOG] Podman 安装完成，已配置 rootless 模式支持"; \
+        ( \
+            set -e && \
+            apt-get update -y --allow-unauthenticated && \
+            apt-get install -y --no-install-recommends \
+                podman \
+                slirp4netns \
+                fuse-overlayfs \
+                uidmap && \
+            echo "node:100000:65536" >> /etc/subuid && \
+            echo "node:100000:65536" >> /etc/subgid && \
+            mkdir -p /etc/containers && \
+            MIRROR_URL=$(echo "$DOCKER_HUB_MIRRORS" | cut -d',' -f1) && \
+            case "$MIRROR_URL" in \
+                daocloud) MIRROR_URL="docker.m.daocloud.io" ;; \
+                aliyun) MIRROR_URL="registry.cn-hangzhou.aliyuncs.com" ;; \
+                tuna) MIRROR_URL="docker.mirrors.tuna.tsinghua.edu.cn" ;; \
+                ustc) MIRROR_URL="docker.mirrors.ustc.edu.cn" ;; \
+            esac && \
+            echo '[registries.search]' > /etc/containers/registries.conf && \
+            echo "registries = ['docker.io', '$MIRROR_URL']" >> /etc/containers/registries.conf && \
+            echo "[LOG] Podman 安装完成，已配置 rootless 模式支持" \
+        ) || echo "[WARN] Podman 安装失败，跳过继续构建..."; \
     else \
         echo "[LOG] 跳过 Podman 安装"; \
     fi
 
-# 安装 Docker Compose（可选）
+# 安装 Docker Compose（可选，安装失败不影响容器创建）
 RUN if [ "$INSTALL_DOCKER_COMPOSE" = "true" ]; then \
         echo "[LOG] 开始安装 Docker Compose..." && \
-        # 使用国内镜像下载 Docker Compose
-        COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION}" && \
-        if [ "$COMPOSE_VERSION" = "latest" ]; then \
-            COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'); \
-        fi && \
-        curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
-        chmod +x /usr/local/bin/docker-compose && \
-        # 如果下载失败，尝试使用国内镜像
-        if [ ! -f /usr/local/bin/docker-compose ] || [ ! -s /usr/local/bin/docker-compose ]; then \
-            echo "[LOG] GitHub 下载失败，尝试使用国内镜像..." && \
-            curl -L "https://mirrors.aliyun.com/docker-toolbox/linux/docker-compose/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
-            chmod +x /usr/local/bin/docker-compose; \
-        fi && \
-        docker-compose --version && \
-        echo "[LOG] Docker Compose 安装完成"; \
+        ( \
+            set -e && \
+            COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION}" && \
+            if [ "$COMPOSE_VERSION" = "latest" ]; then \
+                COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'); \
+            fi && \
+            curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
+            chmod +x /usr/local/bin/docker-compose && \
+            if [ ! -f /usr/local/bin/docker-compose ] || [ ! -s /usr/local/bin/docker-compose ]; then \
+                echo "[LOG] GitHub 下载失败，尝试使用国内镜像..." && \
+                curl -L "https://mirrors.aliyun.com/docker-toolbox/linux/docker-compose/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
+                chmod +x /usr/local/bin/docker-compose; \
+            fi && \
+            docker-compose --version && \
+            echo "[LOG] Docker Compose 安装完成" \
+        ) || echo "[WARN] Docker Compose 安装失败，跳过继续构建..."; \
     else \
         echo "[LOG] 跳过 Docker Compose 安装"; \
     fi
