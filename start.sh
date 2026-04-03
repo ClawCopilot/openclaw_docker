@@ -16,7 +16,7 @@ GATEWAY_SERVICES=${GATEWAY_SERVICES:-serv,coder1,coder2,coder3}
 IFS=',' read -ra gateways <<< "$GATEWAY_SERVICES"
 
 # 定义子目录
-dirs=("supervisor/conf.d" ".ssh" ".openclaw" "workspace" "apps")
+dirs=("supervisor/conf.d" "supervisor/log" ".ssh" ".openclaw" "workspace" "apps")
 
 # Create gateway directories
 for gateway in "${gateways[@]}"; do

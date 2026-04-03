@@ -55,6 +55,7 @@ services:
           memory: 8g
     volumes:
       - ./serv/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./serv/supervisor/log:/var/log/supervisor          # Supervisor log
       - ./serv/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -75,6 +76,7 @@ services:
           memory: 8g
     volumes:
       - ./coder1/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./coder1/supervisor/log:/var/log/supervisor          # Supervisor log
       - ./coder1/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./coder1/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./coder1/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -95,6 +97,7 @@ services:
           memory: 8g
     volumes:
       - ./coder2/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./coder2/supervisor/log:/var/log/supervisor          # Supervisor log
       - ./coder2/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./coder2/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./coder2/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -115,6 +118,7 @@ services:
           memory: 8g
     volumes:
       - ./coder3/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./coder3/supervisor/log:/var/log/supervisor          # Supervisor log
       - ./coder3/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./coder3/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./coder3/workspace:/home/node/workspace:U,z          # Agent workspace

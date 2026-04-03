@@ -6,7 +6,6 @@ echo "[ENTRYPOINT] 检查 OpenClaw 是否已安装..."
 if ! command -v openclaw &> /dev/null; then
     echo "[ENTRYPOINT] OpenClaw 未安装，开始安装..."
     
-    # 设置 npm 全局安装目录到用户目录
     mkdir -p "$HOME/.npm-global"
     npm config set prefix "$HOME/.npm-global"
     export PATH="$HOME/.npm-global/bin:$PATH"
@@ -22,6 +21,19 @@ if ! command -v openclaw &> /dev/null; then
     fi
 else
     echo "[ENTRYPOINT] OpenClaw 已安装: $(openclaw --version 2>/dev/null || echo 'version unknown')"
+fi
+
+echo "[ENTRYPOINT] 启动 Supervisor..."
+if command -v supervisord &> /dev/null; then
+    if [ -f /etc/supervisor/supervisord.conf ]; then
+        mkdir -p "$HOME/.supervisor"
+        supervisord -c /etc/supervisor/supervisord.conf
+        echo "[ENTRYPOINT] Supervisor 已启动"
+    else
+        echo "[ENTRYPOINT] 警告: /etc/supervisor/supervisord.conf 不存在，跳过 Supervisor 启动"
+    fi
+else
+    echo "[ENTRYPOINT] 警告: supervisord 未安装，跳过 Supervisor 启动"
 fi
 
 echo "[ENTRYPOINT] 启动 OpenClaw Gateway 服务..."

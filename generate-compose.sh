@@ -135,6 +135,7 @@ EOF
   cat >> docker-compose.yml << EOF
     volumes:
       - ./$gateway_id/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./$gateway_id/supervisor/log:/var/log/supervisor          # Supervisor log
       - ./$gateway_id/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./$gateway_id/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./$gateway_id/workspace:/home/node/workspace:U,z          # Agent workspace

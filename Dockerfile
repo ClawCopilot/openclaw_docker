@@ -70,6 +70,9 @@ RUN apt-get update -y --allow-unauthenticated && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# 将node用户添加root用户组, sudo 不需要密码
+RUN echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers    
+
 # 安装构建阶段依赖（包含编译工具）
 RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     apt-get update -y --allow-unauthenticated && \
@@ -86,11 +89,34 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     ca-certificates \
     build-essential \
     cron && \
-    # 给node用户添加sudo权限
-    echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    echo "[LOG] 依赖包安装完成，开始清理..." && \
+    echo "[LOG] 依赖包安装完成，开始清理..." && \    
     apt-get clean && \
     echo "[LOG] 清理完成"    
+
+# 配置supervisor
+RUN mkdir -p /var/log/supervisor && \
+    mkdir -p /etc/supervisor/conf.d && \
+    mkdir -p /home/node/.supervisor && \
+    chown -R node:node /var/log/supervisor && \
+    chown -R node:node /home/node/.supervisor && \
+    echo "[supervisord]" > /etc/supervisor/supervisord.conf && \
+    echo "nodaemon=false" >> /etc/supervisor/supervisord.conf && \
+    echo "logfile=/var/log/supervisor/supervisord.log" >> /etc/supervisor/supervisord.conf && \
+    echo "pidfile=/home/node/.supervisor/supervisord.pid" >> /etc/supervisor/supervisord.conf && \
+    echo "childlogdir=/var/log/supervisor" >> /etc/supervisor/supervisord.conf && \
+    echo "" >> /etc/supervisor/supervisord.conf && \
+    echo "[unix_http_server]" >> /etc/supervisor/supervisord.conf && \
+    echo "file=/home/node/.supervisor/supervisor.sock" >> /etc/supervisor/supervisord.conf && \
+    echo "" >> /etc/supervisor/supervisord.conf && \
+    echo "[supervisorctl]" >> /etc/supervisor/supervisord.conf && \
+    echo "serverurl=unix:///home/node/.supervisor/supervisor.sock" >> /etc/supervisor/supervisord.conf && \
+    echo "" >> /etc/supervisor/supervisord.conf && \
+    echo "[rpcinterface:supervisor]" >> /etc/supervisor/supervisord.conf && \
+    echo "supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface" >> /etc/supervisor/supervisord.conf && \
+    echo "" >> /etc/supervisor/supervisord.conf && \
+    echo "[include]" >> /etc/supervisor/supervisord.conf && \
+    echo "files = /etc/supervisor/conf.d/*.conf" >> /etc/supervisor/supervisord.conf && \
+    echo "[LOG] Supervisor 配置完成" 
 
 # 切换到 node 用户    
 USER node    
