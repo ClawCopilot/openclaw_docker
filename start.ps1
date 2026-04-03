@@ -23,6 +23,7 @@ $gateways = $gatewayServices.Split(',') | ForEach-Object { $_.Trim() }
 
 # Create gateway directories
 foreach ($gateway in $gateways) {
+    New-Item -ItemType Directory -Path "$gateway\supervisor\conf.d" -Force
     New-Item -ItemType Directory -Path "$gateway\.openclaw" -Force
     New-Item -ItemType Directory -Path "$gateway\workspace" -Force
     New-Item -ItemType Directory -Path "$gateway\apps" -Force

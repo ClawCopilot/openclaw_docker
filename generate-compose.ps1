@@ -166,10 +166,12 @@ foreach ($serviceName in $services) {
     }
 
     $lines += "    volumes:"
+    $lines += "      - ./$gatewayId/supervisor/conf.d:/etc/supervisor/conf.d    # Supervisor config"    
     $lines += "      - ./$gatewayId/.openclaw:/home/node/.openclaw:U,z          # Config and data"
     $lines += "      - ./$gatewayId/workspace:/home/node/workspace:U,z          # Agent workspace"
     $lines += "      - ./$gatewayId/apps:/home/node/apps:U,z                    # Config apps"
     $lines += "      - ./share:/home/node/share:U,z                             # Config share"
+
 
     # 添加额外 volumes（如果存在）
     if ($volumeMap.ContainsKey($gatewayId)) {

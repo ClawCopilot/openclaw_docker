@@ -134,10 +134,11 @@ EOF
   # 添加固定 volumes
   cat >> docker-compose.yml << EOF
     volumes:
+      - ./$gatewayId/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
       - ./$gateway_id/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./$gateway_id/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./$gateway_id/apps:/home/node/apps:U,z                    # Config apps
-      - ./share:/home/node/share:U,z                             # Config share
+      - ./share:/home/node/share:U,z                              # Config share
 EOF
 
   # 添加额外 volumes（如果存在）
