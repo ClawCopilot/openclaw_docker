@@ -65,75 +65,54 @@ if ($gatewayVolumes) {
     }
 }
 
-# 使用 .NET UTF8Encoding 获取正确的中文字符串
-$utf8Encoding = New-Object System.Text.UTF8Encoding $true
-$textPublicConfig = $utf8Encoding.GetString([byte[]](0xE5, 0x85, 0xAC, 0xE5, 0x85, 0xB1, 0xE9, 0x85, 0x8D, 0xE7, 0xBD, 0xAE, 0xE9, 0x94, 0x9A, 0xE7, 0x82, 0xB9))
-$textServiceConfig = $utf8Encoding.GetString([byte[]](0xE6, 0x9C, 0x8D, 0xE5, 0x8A, 0xA1, 0xE9, 0x85, 0x8D, 0xE7, 0xBD, 0xAE))
-$textGateway = $utf8Encoding.GetString([byte[]](0xE7, 0xBD, 0x91, 0xE5, 0x85, 0xB3))
-
 # 构建内容
 $lines = @()
 
 # 添加头部
-$lines += "# $textPublicConfig"
+$lines += "# 公共配置锚点"
 $lines += "x-base-service:"
 $lines += "  &base-service"
 $lines += "  build:"
 $lines += "    context: ."
 $lines += "    args:"
-$baseImage = if ($env:BASE_IMAGE) { $env:BASE_IMAGE } else { "ghcr.m.daocloud.io/openclaw/openclaw:latest" }
-$lines += "      - BASE_IMAGE=$baseImage"
-$containerHome = if ($env:CONTAINER_HOME) { $env:CONTAINER_HOME } else { "/home/node" }
-$lines += "      - CONTAINER_HOME=$containerHome"
-$tz = if ($env:TZ) { $env:TZ } else { "Asia/Shanghai" }
-$lines += "      - TZ=$tz"
-$pipMirror = if ($env:PIP_MIRROR) { $env:PIP_MIRROR } else { "tuna" }
-$lines += "      - PIP_MIRROR=$pipMirror"
-$rustVersion = if ($env:RUST_VERSION) { $env:RUST_VERSION } else { "stable" }
-$lines += "      - RUST_VERSION=$rustVersion"
-$rustupMirror = if ($env:RUSTUP_MIRROR) { $env:RUSTUP_MIRROR } else { "tuna" }
-$lines += "      - RUSTUP_MIRROR=$rustupMirror"
-$rustMirror = if ($env:RUST_CRATES_MIRROR) { $env:RUST_CRATES_MIRROR } else { "tuna" }
-$lines += "      - RUST_CRATES_MIRROR=$rustMirror"
-$goVersion = if ($env:GO_VERSION) { $env:GO_VERSION } else { "1.22.0" }
-$lines += "      - GO_VERSION=$goVersion"
-$goproxyMirrors = if ($env:GOPROXY_MIRRORS) { $env:GOPROXY_MIRRORS } else { "goproxy.cn,goproxy.io,direct" }
-$lines += "      - GOPROXY_MIRRORS=$goproxyMirrors"
-$dockerHubMirrors = if ($env:DOCKER_HUB_MIRRORS) { $env:DOCKER_HUB_MIRRORS } else { "daocloud,aliyun,tuna" }
-$lines += "      - DOCKER_HUB_MIRRORS=$dockerHubMirrors"
-$openclawVersion = if ($env:OPENCLAW_VERSION) { $env:OPENCLAW_VERSION } else { "latest" }
-$lines += "      - OPENCLAW_VERSION=$openclawVersion"
-$installDocker = if ($env:INSTALL_DOCKER) { $env:INSTALL_DOCKER } else { "false" }
-$lines += "      - INSTALL_DOCKER=$installDocker"
-$installPodman = if ($env:INSTALL_PODMAN) { $env:INSTALL_PODMAN } else { "true" }
-$lines += "      - INSTALL_PODMAN=$installPodman"
-$installDockerCompose = if ($env:INSTALL_DOCKER_COMPOSE) { $env:INSTALL_DOCKER_COMPOSE } else { "false" }
-$lines += "      - INSTALL_DOCKER_COMPOSE=$installDockerCompose"
-$dockerComposeVersion = if ($env:DOCKER_COMPOSE_VERSION) { $env:DOCKER_COMPOSE_VERSION } else { "latest" }
-$lines += "      - DOCKER_COMPOSE_VERSION=$dockerComposeVersion"
+$lines += "      - BASE_IMAGE=`${BASE_IMAGE:-ghcr.m.daocloud.io/openclaw/openclaw:latest}"
+$lines += "      - CONTAINER_HOME=`${CONTAINER_HOME:-/home/node}"
+$lines += "      - TZ=`${TZ:-Asia/Shanghai}"
+$lines += "      - PIP_MIRROR=`${PIP_MIRROR:-tuna}"
+$lines += "      - RUST_VERSION=`${RUST_VERSION:-stable}"
+$lines += "      - RUSTUP_MIRROR=`${RUSTUP_MIRROR:-tuna}"
+$lines += "      - RUST_CRATES_MIRROR=`${RUST_CRATES_MIRROR:-tuna}"
+$lines += "      - GO_VERSION=`${GO_VERSION:-1.25.8}"
+$lines += "      - GOPROXY_MIRRORS=`${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}"
+$lines += "      - DOCKER_HUB_MIRRORS=`${DOCKER_HUB_MIRRORS:-daocloud,aliyun,tuna}"
+$lines += "      - OPENCLAW_VERSION=`${OPENCLAW_VERSION:-latest}"
+$lines += "      - INSTALL_DOCKER=`${INSTALL_DOCKER:-false}"
+$lines += "      - INSTALL_PODMAN=`${INSTALL_PODMAN:-true}"
+$lines += "      - INSTALL_DOCKER_COMPOSE=`${INSTALL_DOCKER_COMPOSE:-false}"
+$lines += "      - DOCKER_COMPOSE_VERSION=`${DOCKER_COMPOSE_VERSION:-latest}"
 $lines += "  environment:"
 $lines += "    - PORT=18789"
-$lines += '    - NODE_ENV=${OPENCLAW_NODE_ENV:-production}'
-$lines += '    - npm_config_registry=${npm_config_registry:-https://registry.npmmirror.com/}'
-$lines += '    - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}'
-$lines += '    - TZ=${TZ:-Asia/Shanghai}'
-$lines += "    - OPENCLAW_VERSION=$openclawVersion"
-$lines += '  restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}'
+$lines += "    - NODE_ENV=`${OPENCLAW_NODE_ENV:-production}"
+$lines += "    - npm_config_registry=`${npm_config_registry:-https://registry.npmmirror.com/}"
+$lines += "    - pnpm_config_registry=`${pnpm_config_registry:-https://registry.npmmirror.com/}"
+$lines += "    - TZ=`${TZ:-Asia/Shanghai}"
+$lines += "    - OPENCLAW_VERSION=`${OPENCLAW_VERSION:-latest}"
+$lines += "  restart: `${CONTAINER_RESTART_POLICY:-unless-stopped}"
 $lines += "  logging:"
 $lines += "    driver: json-file"
 $lines += "    options:"
-$lines += '      max-size: "${LOG_MAX_SIZE:-10m}"'
-$lines += '      max-file: "${LOG_MAX_FILE:-3}"'
+$lines += "      max-size: `"`${LOG_MAX_SIZE:-10m}`""
+$lines += "      max-file: `"`${LOG_MAX_FILE:-3}`""
 $lines += "  healthcheck:"
-$lines += '    test: ["CMD", "curl", "-f", "http://localhost:18789/health"]'
-$lines += '    interval: ${HEALTHCHECK_INTERVAL:-30s}'
-$lines += '    timeout: ${HEALTHCHECK_TIMEOUT:-10s}'
-$lines += '    start_period: ${HEALTHCHECK_START_PERIOD:-5s}'
-$lines += '    retries: ${HEALTHCHECK_RETRIES:-3}'
+$lines += "    test: [`"CMD`", `"curl`", `"-f`", `"http://localhost:18789/health`"]"
+$lines += "    interval: `${HEALTHCHECK_INTERVAL:-30s}"
+$lines += "    timeout: `${HEALTHCHECK_TIMEOUT:-10s}"
+$lines += "    start_period: `${HEALTHCHECK_START_PERIOD:-5s}"
+$lines += "    retries: `${HEALTHCHECK_RETRIES:-3}"
 $lines += "  privileged: true"
-$lines += '  network_mode: ${NETWORK_MODE:-bridge}'
+$lines += "  network_mode: `${NETWORK_MODE:-bridge}"
 $lines += ""
-$lines += "# $textServiceConfig"
+$lines += "# 服务配置"
 $lines += "services:"
 
 # 生成网关服务配置
@@ -143,8 +122,7 @@ foreach ($serviceName in $services) {
     $containerName = $serviceName
     $gatewayId = $serviceName
 
-    $lines += ""
-    $lines += "  # $textGateway $i - $gatewayId"
+    $lines += "  # 网关 $i - $gatewayId"
     $lines += "  $serviceName`:"
     $lines += "    <<: *base-service"
     $lines += "    container_name: $containerName"
@@ -166,12 +144,11 @@ foreach ($serviceName in $services) {
     }
 
     $lines += "    volumes:"
-    $lines += "      - ./$gatewayId/supervisor/conf.d:/etc/supervisor/conf.d    # Supervisor config"    
+    $lines += "      - ./$gatewayId/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config"
     $lines += "      - ./$gatewayId/.openclaw:/home/node/.openclaw:U,z          # Config and data"
     $lines += "      - ./$gatewayId/workspace:/home/node/workspace:U,z          # Agent workspace"
     $lines += "      - ./$gatewayId/apps:/home/node/apps:U,z                    # Config apps"
-    $lines += "      - ./share:/home/node/share:U,z                             # Config share"
-
+    $lines += "      - ./share:/home/node/share:U,z                              # Config share"
 
     # 添加额外 volumes（如果存在）
     if ($volumeMap.ContainsKey($gatewayId)) {
@@ -185,12 +162,14 @@ foreach ($serviceName in $services) {
 
     $lines += "    environment:"
     $lines += "      - GATEWAY_ID=$gatewayId"
+    $lines += ""
 
     $i++
 }
 
 # 使用 UTF-8 without BOM 编码写入文件
 $content = $lines -join "`n"
+$content += "`n"
 $utf8 = [System.Text.Encoding]::UTF8
 $bytes = $utf8.GetBytes($content)
 [System.IO.File]::WriteAllBytes(".\docker-compose.yml", $bytes)

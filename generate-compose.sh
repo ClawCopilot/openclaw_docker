@@ -58,7 +58,7 @@ x-base-service:
       - RUST_VERSION=${RUST_VERSION:-stable}
       - RUSTUP_MIRROR=${RUSTUP_MIRROR:-tuna}
       - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
-      - GO_VERSION=${GO_VERSION:-1.22.0}
+      - GO_VERSION=${GO_VERSION:-1.25.8}
       - GOPROXY_MIRRORS=${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}
       - DOCKER_HUB_MIRRORS=${DOCKER_HUB_MIRRORS:-daocloud,aliyun,tuna}
       - OPENCLAW_VERSION=${OPENCLAW_VERSION:-latest}
@@ -134,7 +134,7 @@ EOF
   # 添加固定 volumes
   cat >> docker-compose.yml << EOF
     volumes:
-      - ./$gatewayId/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./$gateway_id/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
       - ./$gateway_id/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./$gateway_id/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./$gateway_id/apps:/home/node/apps:U,z                    # Config apps
