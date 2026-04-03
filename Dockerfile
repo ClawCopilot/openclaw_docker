@@ -415,6 +415,57 @@ RUN if [ "$INSTALL_DOCKER_COMPOSE" = "true" ]; then \
         echo "[LOG] 跳过 Docker Compose 安装"; \
     fi
 
+# Ollama 和 VLLM 安装配置
+ARG INSTALL_OLLAMA=false
+ARG OLLAMA_MIRROR=modelscope
+ARG INSTALL_VLLM=false
+ARG VLLM_MIRROR=tuna
+
+# 安装 Ollama（可选，安装失败不影响容器创建）
+RUN if [ "$INSTALL_OLLAMA" = "true" ]; then \
+        echo "[LOG] 开始安装 Ollama..." && \
+        ( \
+            set -e && \
+            if [ "$OLLAMA_MIRROR" = "modelscope" ]; then \
+                echo "[LOG] 使用魔搭社区镜像下载 Ollama..." && \
+                curl -fsSL "https://modelscope.cn/models/ollama/ollama/resolve/main/ollama-linux-amd64" -o /usr/local/bin/ollama || \
+                curl -fsSL "https://ollama.com/install.sh" | sh; \
+            else \
+                curl -fsSL "https://ollama.com/install.sh" | sh; \
+            fi && \
+            chmod +x /usr/local/bin/ollama 2>/dev/null || true && \
+            ollama --version && \
+            echo "[LOG] Ollama 安装完成" \
+        ) || echo "[WARN] Ollama 安装失败，跳过继续构建..."; \
+    else \
+        echo "[LOG] 跳过 Ollama 安装"; \
+    fi
+
+# 安装 VLLM（可选，安装失败不影响容器创建）
+RUN if [ "$INSTALL_VLLM" = "true" ]; then \
+        echo "[LOG] 开始安装 VLLM..." && \
+        ( \
+            set -e && \
+            PIP_INDEX_URL="" && \
+            if [ "$VLLM_MIRROR" = "tuna" ]; then \
+                PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"; \
+            elif [ "$VLLM_MIRROR" = "aliyun" ]; then \
+                PIP_INDEX_URL="https://mirrors.aliyun.com/pypi/simple/"; \
+            elif [ "$VLLM_MIRROR" = "douban" ]; then \
+                PIP_INDEX_URL="https://pypi.doubanio.com/simple/"; \
+            fi && \
+            if [ -n "$PIP_INDEX_URL" ]; then \
+                pip3 install vllm -i "$PIP_INDEX_URL" --trusted-host $(echo "$PIP_INDEX_URL" | sed 's|https://\([^/]*\).*|\1|'); \
+            else \
+                pip3 install vllm; \
+            fi && \
+            python3 -c "import vllm; print(f'VLLM version: {vllm.__version__}')" && \
+            echo "[LOG] VLLM 安装完成" \
+        ) || echo "[WARN] VLLM 安装失败，跳过继续构建..."; \
+    else \
+        echo "[LOG] 跳过 VLLM 安装"; \
+    fi
+
 USER node
 
 # 设置 entrypoint（在容器启动时检测并启动 OpenClaw）

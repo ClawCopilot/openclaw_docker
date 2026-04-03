@@ -19,6 +19,10 @@ x-base-service:
       - INSTALL_PODMAN=${INSTALL_PODMAN:-true}
       - INSTALL_DOCKER_COMPOSE=${INSTALL_DOCKER_COMPOSE:-false}
       - DOCKER_COMPOSE_VERSION=${DOCKER_COMPOSE_VERSION:-latest}
+      - INSTALL_OLLAMA=${INSTALL_OLLAMA:-false}
+      - OLLAMA_MIRROR=${OLLAMA_MIRROR:-modelscope}
+      - INSTALL_VLLM=${INSTALL_VLLM:-false}
+      - VLLM_MIRROR=${VLLM_MIRROR:-tuna}
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}

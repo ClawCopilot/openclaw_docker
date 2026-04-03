@@ -1,4 +1,4 @@
-﻿# 切换到脚本所在目录
+# 切换到脚本所在目录
 $scriptDir = $PSScriptRoot
 if (-not $scriptDir) {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -90,6 +90,10 @@ $lines += "      - INSTALL_DOCKER=`${INSTALL_DOCKER:-false}"
 $lines += "      - INSTALL_PODMAN=`${INSTALL_PODMAN:-true}"
 $lines += "      - INSTALL_DOCKER_COMPOSE=`${INSTALL_DOCKER_COMPOSE:-false}"
 $lines += "      - DOCKER_COMPOSE_VERSION=`${DOCKER_COMPOSE_VERSION:-latest}"
+$lines += "      - INSTALL_OLLAMA=`${INSTALL_OLLAMA:-false}"
+$lines += "      - OLLAMA_MIRROR=`${OLLAMA_MIRROR:-modelscope}"
+$lines += "      - INSTALL_VLLM=`${INSTALL_VLLM:-false}"
+$lines += "      - VLLM_MIRROR=`${VLLM_MIRROR:-tuna}"
 $lines += "  environment:"
 $lines += "    - PORT=18789"
 $lines += "    - NODE_ENV=`${OPENCLAW_NODE_ENV:-production}"
