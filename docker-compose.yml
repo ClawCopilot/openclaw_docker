@@ -14,6 +14,10 @@ x-base-service:
       - GOPROXY_MIRRORS=${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}
       - DOCKER_HUB_MIRRORS=${DOCKER_HUB_MIRRORS:-daocloud,aliyun,tuna}
       - OPENCLAW_VERSION=${OPENCLAW_VERSION:-latest}
+      - INSTALL_DOCKER=${INSTALL_DOCKER:-false}
+      - INSTALL_PODMAN=${INSTALL_PODMAN:-true}
+      - INSTALL_DOCKER_COMPOSE=${INSTALL_DOCKER_COMPOSE:-false}
+      - DOCKER_COMPOSE_VERSION=${DOCKER_COMPOSE_VERSION:-latest}
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
@@ -44,8 +48,10 @@ services:
     container_name: sme1
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    mem_limit: 8g
-    memswap_limit: 8g
+    deploy:
+      resources:
+        limits:
+          memory: 8g
     volumes:
       - ./sme1/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme1/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -60,8 +66,10 @@ services:
     container_name: sme2
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    mem_limit: 8g
-    memswap_limit: 8g
+    deploy:
+      resources:
+        limits:
+          memory: 8g
     volumes:
       - ./sme2/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme2/workspace:/home/node/workspace:U,z          # Agent workspace
@@ -76,8 +84,10 @@ services:
     container_name: serv
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    mem_limit: 8g
-    memswap_limit: 8g
+    deploy:
+      resources:
+        limits:
+          memory: 8g
     volumes:
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace

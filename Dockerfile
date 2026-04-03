@@ -163,7 +163,7 @@ RUN mkdir -p "$HOME/.cargo" && \
     fi
 
 # 安装 Go
-ARG GO_VERSION=1.22.0
+ARG GO_VERSION=1.25.0
 ARG GOPROXY_MIRRORS=goproxy.cn,goproxy.io,direct
 USER root
 RUN echo "[LOG] 检查 Go 是否已安装..." && \
@@ -282,6 +282,89 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
 # 设置 brew 环境变量
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
 ENV HOMEBREW_BOTTLE_DOMAIN="https://mirrors.ustc.edu.cn/homebrew-bottles"
+
+# 容器工具安装配置
+ARG INSTALL_DOCKER=false
+ARG INSTALL_PODMAN=true
+ARG INSTALL_DOCKER_COMPOSE=false
+ARG DOCKER_COMPOSE_VERSION=latest
+
+# 安装 Docker（可选）
+USER root
+RUN if [ "$INSTALL_DOCKER" = "true" ]; then \
+        echo "[LOG] 开始安装 Docker..." && \
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends \
+            apt-transport-https \
+            ca-certificates \
+            curl \
+            gnupg \
+            lsb-release && \
+        # 使用国内镜像源安装 Docker
+        curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.aliyun.com/docker-ce/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io && \
+        # 配置 Docker 镜像加速
+        mkdir -p /etc/docker && \
+        # 将 node 用户添加到 docker 组，使其可以执行 docker 命令
+        usermod -aG docker node && \
+        echo "[LOG] Docker 安装完成，node 用户已添加到 docker 组"; \
+    else \
+        echo "[LOG] 跳过 Docker 安装"; \
+    fi
+
+# 安装 Podman（可选）
+RUN if [ "$INSTALL_PODMAN" = "true" ]; then \
+        echo "[LOG] 开始安装 Podman..." && \
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends \
+            podman \
+            slirp4netns \
+            fuse-overlayfs \
+            uidmap && \
+        # 配置 Podman rootless 模式支持
+        echo "node:100000:65536" >> /etc/subuid && \
+        echo "node:100000:65536" >> /etc/subgid && \
+        # 配置 Podman 镜像加速（使用 DOCKER_HUB_MIRRORS 的第一个镜像）
+        mkdir -p /etc/containers && \
+        MIRROR_URL=$(echo "$DOCKER_HUB_MIRRORS" | cut -d',' -f1) && \
+        case "$MIRROR_URL" in \
+            daocloud) MIRROR_URL="docker.m.daocloud.io" ;; \
+            aliyun) MIRROR_URL="registry.cn-hangzhou.aliyuncs.com" ;; \
+            tuna) MIRROR_URL="docker.mirrors.tuna.tsinghua.edu.cn" ;; \
+            ustc) MIRROR_URL="docker.mirrors.ustc.edu.cn" ;; \
+        esac && \
+        echo '[registries.search]' > /etc/containers/registries.conf && \
+        echo "registries = ['docker.io', '$MIRROR_URL']" >> /etc/containers/registries.conf && \
+        echo "[LOG] Podman 安装完成，已配置 rootless 模式支持"; \
+    else \
+        echo "[LOG] 跳过 Podman 安装"; \
+    fi
+
+# 安装 Docker Compose（可选）
+RUN if [ "$INSTALL_DOCKER_COMPOSE" = "true" ]; then \
+        echo "[LOG] 开始安装 Docker Compose..." && \
+        # 使用国内镜像下载 Docker Compose
+        COMPOSE_VERSION="${DOCKER_COMPOSE_VERSION}" && \
+        if [ "$COMPOSE_VERSION" = "latest" ]; then \
+            COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'); \
+        fi && \
+        curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
+        chmod +x /usr/local/bin/docker-compose && \
+        # 如果下载失败，尝试使用国内镜像
+        if [ ! -f /usr/local/bin/docker-compose ] || [ ! -s /usr/local/bin/docker-compose ]; then \
+            echo "[LOG] GitHub 下载失败，尝试使用国内镜像..." && \
+            curl -L "https://mirrors.aliyun.com/docker-toolbox/linux/docker-compose/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && \
+            chmod +x /usr/local/bin/docker-compose; \
+        fi && \
+        docker-compose --version && \
+        echo "[LOG] Docker Compose 安装完成"; \
+    else \
+        echo "[LOG] 跳过 Docker Compose 安装"; \
+    fi
+
+USER node
 
 # 设置 entrypoint（在容器启动时检测并启动 OpenClaw）
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

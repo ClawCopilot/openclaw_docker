@@ -101,6 +101,14 @@ $dockerHubMirrors = if ($env:DOCKER_HUB_MIRRORS) { $env:DOCKER_HUB_MIRRORS } els
 $lines += "      - DOCKER_HUB_MIRRORS=$dockerHubMirrors"
 $openclawVersion = if ($env:OPENCLAW_VERSION) { $env:OPENCLAW_VERSION } else { "latest" }
 $lines += "      - OPENCLAW_VERSION=$openclawVersion"
+$installDocker = if ($env:INSTALL_DOCKER) { $env:INSTALL_DOCKER } else { "false" }
+$lines += "      - INSTALL_DOCKER=$installDocker"
+$installPodman = if ($env:INSTALL_PODMAN) { $env:INSTALL_PODMAN } else { "true" }
+$lines += "      - INSTALL_PODMAN=$installPodman"
+$installDockerCompose = if ($env:INSTALL_DOCKER_COMPOSE) { $env:INSTALL_DOCKER_COMPOSE } else { "false" }
+$lines += "      - INSTALL_DOCKER_COMPOSE=$installDockerCompose"
+$dockerComposeVersion = if ($env:DOCKER_COMPOSE_VERSION) { $env:DOCKER_COMPOSE_VERSION } else { "latest" }
+$lines += "      - DOCKER_COMPOSE_VERSION=$dockerComposeVersion"
 $lines += "  environment:"
 $lines += "    - PORT=18789"
 $lines += '    - NODE_ENV=${OPENCLAW_NODE_ENV:-production}'
@@ -141,10 +149,12 @@ foreach ($serviceName in $services) {
     $lines += "    extra_hosts:"
     $lines += "      - `"host.docker.internal:host-gateway`""
 
-    # 添加 mem_limit 和 memswap_limit（如果设置了 CONTAINER_MEM_LIMIT）
+    # 添加 deploy.resources（如果设置了 CONTAINER_MEM_LIMIT）
     if ($env:CONTAINER_MEM_LIMIT) {
-        $lines += "    mem_limit: $($env:CONTAINER_MEM_LIMIT)"
-        $lines += "    memswap_limit: $($env:CONTAINER_MEM_LIMIT)"
+        $lines += "    deploy:"
+        $lines += "      resources:"
+        $lines += "        limits:"
+        $lines += "          memory: $($env:CONTAINER_MEM_LIMIT)"
     }
 
     if ($portMap.ContainsKey($gatewayId)) {
