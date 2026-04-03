@@ -11,7 +11,7 @@
 
 ## バージョン
 
-- 現在のバージョン：v2026.3.30
+- 現在のバージョン：v2026.4.3
 
 ## プロジェクト概要
 
@@ -29,6 +29,11 @@
 - **OpenClaw バージョン制御**：OpenClaw のインストールバージョンを指定
 - **多言語サポート**：Rust、Go、Python の国内ミラー加速
 - **Docker Hub ミラー加速**：複数ミラーソースのサポート
+- **SSH 設定サポート**：.ssh ディレクトリマウントで SSH 設定をサポート
+- **Supervisor 設定**：supervisor/conf.d ディレクトリ設定をサポート
+- **コンテナツールインストール**：Docker、Podman、Docker Compose のオプションインストール
+- **フォールトトレラントインストール**：ツールインストール失敗がコンテナ作成に影響しない
+- **Rustup ミラー加速**：Rust ツールチェーンダウンロードの国内ミラーをサポート
 
 ## 前提条件
 
@@ -126,10 +131,15 @@ GATEWAY_VOLUMES=
 | `pnpm_config_registry` | pnpm ミラーソース | `https://registry.npmmirror.com/` |
 | `PIP_MIRROR` | pip ミラーソース (tuna/aliyun/douban) | `tuna` |
 | `RUST_VERSION` | Rust バージョン | `stable` |
+| `RUSTUP_MIRROR` | Rust rustup ミラー (tuna/ustc) | `tuna` |
 | `RUST_CRATES_MIRROR` | Rust crates.io ミラー (tuna/ustc/rsproxy) | `tuna` |
-| `GO_VERSION` | Go バージョン | `1.22.0` |
+| `GO_VERSION` | Go バージョン | `1.25.8` |
 | `GOPROXY_MIRRORS` | Go モジュールプロキシミラー | `goproxy.cn,goproxy.io,direct` |
 | `DOCKER_HUB_MIRRORS` | Docker Hub ミラー加速 | `daocloud,aliyun,tuna` |
+| `INSTALL_DOCKER` | Docker をインストールするかどうか (true/false) | `false` |
+| `INSTALL_PODMAN` | Podman をインストールするかどうか (true/false) | `true` |
+| `INSTALL_DOCKER_COMPOSE` | Docker Compose をインストールするかどうか (true/false) | `false` |
+| `DOCKER_COMPOSE_VERSION` | Docker Compose バージョン | `latest` |
 | `LOG_MAX_SIZE` | ログファイルの最大サイズ | `10m` |
 | `LOG_MAX_FILE` | ログファイルの最大数 | `3` |
 | `HEALTHCHECK_INTERVAL` | ヘルスチェック間隔 | `30s` |
@@ -148,6 +158,10 @@ GATEWAY_VOLUMES=
 - 設定可能な OpenClaw インストールバージョンをサポート
 - GitHub Hosts 更新スクリプトと cron ジョブを含む
 - OpenClaw を自動インストールするエントリポイントスクリプトを含む
+- Docker、Podman、Docker Compose のオプションインストールをサポート
+- フォールトトレラントインストール：ツールインストール失敗がコンテナ作成に影響しない
+- Rustup 国内ミラー加速をサポート
+- brew がインストール済みで PATH が未設定の場合をサポート
 
 ## スクリプトの使用
 

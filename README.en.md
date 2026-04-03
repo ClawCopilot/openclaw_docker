@@ -11,7 +11,7 @@
 
 ## Version
 
-- Current version: v2026.3.30
+- Current version: v2026.4.3
 
 ## Overview
 
@@ -29,6 +29,11 @@ This project provides a Docker-based deployment solution for OpenClaw with multi
 - **OpenClaw version control**: Specify OpenClaw installation version
 - **Multi-language support**: Rust, Go, Python with domestic mirrors
 - **Docker Hub mirror acceleration**: Multiple mirror sources support
+- **SSH configuration support**: Support .ssh directory mount for SSH configuration
+- **Supervisor configuration**: Support supervisor/conf.d directory configuration
+- **Container tools installation**: Optional installation of Docker, Podman, Docker Compose
+- **Fault-tolerant installation**: Tool installation failure does not affect container creation
+- **Rustup mirror acceleration**: Support domestic mirrors for Rust toolchain download
 
 ## Prerequisites
 
@@ -126,10 +131,15 @@ GATEWAY_VOLUMES=
 | `pnpm_config_registry` | pnpm mirror source | `https://registry.npmmirror.com/` |
 | `PIP_MIRROR` | pip mirror source (tuna/aliyun/douban) | `tuna` |
 | `RUST_VERSION` | Rust version | `stable` |
+| `RUSTUP_MIRROR` | Rust rustup mirror (tuna/ustc) | `tuna` |
 | `RUST_CRATES_MIRROR` | Rust crates.io mirror (tuna/ustc/rsproxy) | `tuna` |
-| `GO_VERSION` | Go version | `1.22.0` |
+| `GO_VERSION` | Go version | `1.25.8` |
 | `GOPROXY_MIRRORS` | Go module proxy mirrors | `goproxy.cn,goproxy.io,direct` |
 | `DOCKER_HUB_MIRRORS` | Docker Hub mirror acceleration | `daocloud,aliyun,tuna` |
+| `INSTALL_DOCKER` | Whether to install Docker (true/false) | `false` |
+| `INSTALL_PODMAN` | Whether to install Podman (true/false) | `true` |
+| `INSTALL_DOCKER_COMPOSE` | Whether to install Docker Compose (true/false) | `false` |
+| `DOCKER_COMPOSE_VERSION` | Docker Compose version | `latest` |
 | `LOG_MAX_SIZE` | Maximum log file size | `10m` |
 | `LOG_MAX_FILE` | Maximum number of log files | `3` |
 | `HEALTHCHECK_INTERVAL` | Health check interval | `30s` |
@@ -148,6 +158,10 @@ GATEWAY_VOLUMES=
 - Supports configurable OpenClaw version installation
 - Includes GitHub Hosts update script with cron job
 - Includes entrypoint script for automatic OpenClaw installation
+- Supports optional installation of Docker, Podman, Docker Compose
+- Fault-tolerant installation: tool installation failure does not affect container creation
+- Supports Rustup domestic mirror acceleration
+- Supports brew installed but PATH not configured scenario
 
 ## Script Usage
 

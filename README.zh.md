@@ -11,7 +11,7 @@
 
 ## 版本
 
-- 当前版本：v2026.3.30
+- 当前版本：v2026.4.3
 
 ## 项目概述
 
@@ -29,6 +29,11 @@
 - **OpenClaw 版本控制**：指定 OpenClaw 安装版本
 - **多语言支持**：Rust、Go、Python 国内镜像加速
 - **Docker Hub 镜像加速**：支持多镜像源配置
+- **SSH 配置支持**：支持 .ssh 目录挂载配置 SSH
+- **Supervisor 配置**：支持 supervisor/conf.d 目录配置
+- **容器工具安装**：可选安装 Docker、Podman、Docker Compose
+- **容错安装机制**：工具安装失败不影响容器创建
+- **Rustup 镜像加速**：支持国内镜像加速 Rust 工具链下载
 
 ## 环境要求
 
@@ -126,10 +131,15 @@ GATEWAY_VOLUMES=
 | `pnpm_config_registry` | pnpm 镜像源 | `https://registry.npmmirror.com/` |
 | `PIP_MIRROR` | pip 镜像源 (tuna/aliyun/douban) | `tuna` |
 | `RUST_VERSION` | Rust 版本 | `stable` |
+| `RUSTUP_MIRROR` | Rust rustup 镜像 (tuna/ustc) | `tuna` |
 | `RUST_CRATES_MIRROR` | Rust crates.io 镜像 (tuna/ustc/rsproxy) | `tuna` |
-| `GO_VERSION` | Go 版本 | `1.22.0` |
+| `GO_VERSION` | Go 版本 | `1.25.8` |
 | `GOPROXY_MIRRORS` | Go 模块代理镜像 | `goproxy.cn,goproxy.io,direct` |
 | `DOCKER_HUB_MIRRORS` | Docker Hub 镜像加速 | `daocloud,aliyun,tuna` |
+| `INSTALL_DOCKER` | 是否安装 Docker (true/false) | `false` |
+| `INSTALL_PODMAN` | 是否安装 Podman (true/false) | `true` |
+| `INSTALL_DOCKER_COMPOSE` | 是否安装 Docker Compose (true/false) | `false` |
+| `DOCKER_COMPOSE_VERSION` | Docker Compose 版本 | `latest` |
 | `LOG_MAX_SIZE` | 日志文件最大大小 | `10m` |
 | `LOG_MAX_FILE` | 日志文件最大数量 | `3` |
 | `HEALTHCHECK_INTERVAL` | 健康检查间隔 | `30s` |
@@ -148,6 +158,10 @@ GATEWAY_VOLUMES=
 - 支持配置 OpenClaw 安装版本
 - 包含 GitHub Hosts 更新脚本和定时任务
 - 包含入口脚本自动安装 OpenClaw
+- 支持可选安装 Docker、Podman、Docker Compose
+- 容错安装机制：工具安装失败不影响容器创建
+- 支持 Rustup 国内镜像加速
+- 支持 brew 已安装但未配置 PATH 的情况
 
 ## 脚本使用
 
