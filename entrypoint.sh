@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# 整理 PATH 环境变量，去除重复路径（保留首次出现的）
+if [ -n "$PATH" ]; then
+    NEW_PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++{print $0}' | sed 's/:$//')
+    if [ "$NEW_PATH" != "$PATH" ]; then
+        export PATH="$NEW_PATH"
+        echo "[ENTRYPOINT] PATH 已整理去重"
+    fi
+fi
+
 echo "[ENTRYPOINT] OpenClaw 容器启动脚本"
 
 echo "[ENTRYPOINT] 检查 OpenClaw 是否已安装..."

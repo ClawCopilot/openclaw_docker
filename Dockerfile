@@ -85,6 +85,7 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     python3 \
     python3-pip \
     curl \
+    nginx \
     wget \
     ca-certificates \
     build-essential \
@@ -117,6 +118,9 @@ RUN mkdir -p /var/log/supervisor && \
     echo "[include]" >> /etc/supervisor/supervisord.conf && \
     echo "files = /etc/supervisor/conf.d/*.conf" >> /etc/supervisor/supervisord.conf && \
     echo "[LOG] Supervisor 配置完成" 
+
+# 配置nginx
+RUN chown -R node:node /var/lib/nginx/
 
 # 切换到 node 用户    
 USER node    
@@ -329,7 +333,7 @@ RUN echo "[LOG] 检查 brew 是否已安装..." && \
     fi
 
 # 设置 brew 环境变量
-ENV PATH="/home/linuxbrew/.linuxbrew/bin:${PATH}"
+ENV PATH="${PATH}:/home/linuxbrew/.linuxbrew/bin"
 ENV HOMEBREW_BOTTLE_DOMAIN="https://mirrors.ustc.edu.cn/homebrew-bottles"
 
 # 容器工具安装配置
@@ -466,7 +470,42 @@ RUN if [ "$INSTALL_VLLM" = "true" ]; then \
         echo "[LOG] 跳过 VLLM 安装"; \
     fi
 
+# uv 安装配置
+ARG INSTALL_UV=false
+ARG UV_MIRROR=ghproxy
+
+# 安装 uv（可选，安装失败不影响容器创建）
+RUN if [ "$INSTALL_UV" = "true" ]; then \
+        echo "[LOG] 开始安装 uv..." && \
+        ( \
+            set -e && \
+            UV_VERSION=$(curl -s https://api.github.com/repos/astral-sh/uv/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') && \
+            if [ "$UV_MIRROR" = "ghproxy" ]; then \
+                echo "[LOG] 使用 GitHub 代理下载 uv..." && \
+                curl -fsSL "https://ghproxy.net/https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/uv.tar.gz || \
+                curl -fsSL "https://mirror.ghproxy.com/https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/uv.tar.gz || \
+                curl -fsSL "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/uv.tar.gz; \
+            else \
+                curl -fsSL "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/uv.tar.gz; \
+            fi && \
+            tar -xzf /tmp/uv.tar.gz -C /tmp && \
+            mv /tmp/uv-x86_64-unknown-linux-gnu/uv /usr/local/bin/uv && \
+            chmod +x /usr/local/bin/uv && \
+            rm -rf /tmp/uv.tar.gz /tmp/uv-x86_64-unknown-linux-gnu && \
+            uv --version && \
+            echo "[LOG] uv 安装完成" \
+        ) || echo "[WARN] uv 安装失败，跳过继续构建..."; \
+    else \
+        echo "[LOG] 跳过 uv 安装"; \
+    fi
+
 USER node
+
+# 整理 PATH 环境变量写入 .bashrc（保留首次出现的）
+RUN echo "[LOG] 整理 PATH 环境变量..." && \
+    NEW_PATH=$(echo "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++{print $0}' | sed 's/:$//') && \
+    echo "export PATH=$NEW_PATH" >> "$HOME/.bashrc" && \
+    echo "[LOG] PATH 整理完成"
 
 # 设置 entrypoint（在容器启动时检测并启动 OpenClaw）
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

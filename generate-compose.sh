@@ -70,6 +70,8 @@ x-base-service:
       - OLLAMA_MIRROR=${OLLAMA_MIRROR:-modelscope}
       - INSTALL_VLLM=${INSTALL_VLLM:-false}
       - VLLM_MIRROR=${VLLM_MIRROR:-tuna}
+      - INSTALL_UV=${INSTALL_UV:-false}
+      - UV_MIRROR=${UV_MIRROR:-ghproxy}
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
