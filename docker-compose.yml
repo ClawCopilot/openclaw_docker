@@ -55,6 +55,7 @@ services:
           memory: 8g
     volumes:
       - ./sme1/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./sme1/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./sme1/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme1/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./sme1/apps:/home/node/apps:U,z                    # Config apps
@@ -74,6 +75,7 @@ services:
           memory: 8g
     volumes:
       - ./sme2/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./sme2/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./sme2/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./sme2/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./sme2/apps:/home/node/apps:U,z                    # Config apps
@@ -93,6 +95,7 @@ services:
           memory: 8g
     volumes:
       - ./serv/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config
+      - ./serv/.ssh:/home/node/.ssh:U,z                    # Config ssh
       - ./serv/.openclaw:/home/node/.openclaw:U,z          # Config and data
       - ./serv/workspace:/home/node/workspace:U,z          # Agent workspace
       - ./serv/apps:/home/node/apps:U,z                    # Config apps

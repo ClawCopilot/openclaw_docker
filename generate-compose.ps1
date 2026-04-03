@@ -145,6 +145,7 @@ foreach ($serviceName in $services) {
 
     $lines += "    volumes:"
     $lines += "      - ./$gatewayId/supervisor/conf.d:/etc/supervisor/conf.d     # Supervisor config"
+    $lines += "      - ./$gatewayId/.ssh:/home/node/.ssh:U,z                    # Config ssh"
     $lines += "      - ./$gatewayId/.openclaw:/home/node/.openclaw:U,z          # Config and data"
     $lines += "      - ./$gatewayId/workspace:/home/node/workspace:U,z          # Agent workspace"
     $lines += "      - ./$gatewayId/apps:/home/node/apps:U,z                    # Config apps"
