@@ -56,6 +56,7 @@ x-base-service:
       - TZ=${TZ:-Asia/Shanghai}
       - PIP_MIRROR=${PIP_MIRROR:-tuna}
       - RUST_VERSION=${RUST_VERSION:-stable}
+      - RUSTUP_MIRROR=${RUSTUP_MIRROR:-tuna}
       - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
       - GO_VERSION=${GO_VERSION:-1.22.0}
       - GOPROXY_MIRRORS=${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}

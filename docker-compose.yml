@@ -4,27 +4,28 @@ x-base-service:
   build:
     context: .
     args:
-      - BASE_IMAGE=${BASE_IMAGE:-ghcr.m.daocloud.io/openclaw/openclaw:latest}
-      - CONTAINER_HOME=${CONTAINER_HOME:-/home/node}
-      - TZ=${TZ:-Asia/Shanghai}
-      - PIP_MIRROR=${PIP_MIRROR:-tuna}
-      - RUST_VERSION=${RUST_VERSION:-stable}
-      - RUST_CRATES_MIRROR=${RUST_CRATES_MIRROR:-tuna}
-      - GO_VERSION=${GO_VERSION:-1.22.0}
-      - GOPROXY_MIRRORS=${GOPROXY_MIRRORS:-goproxy.cn,goproxy.io,direct}
-      - DOCKER_HUB_MIRRORS=${DOCKER_HUB_MIRRORS:-daocloud,aliyun,tuna}
-      - OPENCLAW_VERSION=${OPENCLAW_VERSION:-latest}
-      - INSTALL_DOCKER=${INSTALL_DOCKER:-false}
-      - INSTALL_PODMAN=${INSTALL_PODMAN:-true}
-      - INSTALL_DOCKER_COMPOSE=${INSTALL_DOCKER_COMPOSE:-false}
-      - DOCKER_COMPOSE_VERSION=${DOCKER_COMPOSE_VERSION:-latest}
+      - BASE_IMAGE=ghcr.m.daocloud.io/openclaw/openclaw:latest
+      - CONTAINER_HOME=/home/node
+      - TZ=Asia/Shanghai
+      - PIP_MIRROR=tuna
+      - RUST_VERSION=stable
+      - RUSTUP_MIRROR=tuna
+      - RUST_CRATES_MIRROR=tuna
+      - GO_VERSION=1.22.0
+      - GOPROXY_MIRRORS=goproxy.cn,goproxy.io,direct
+      - DOCKER_HUB_MIRRORS=daocloud,aliyun,tuna
+      - OPENCLAW_VERSION=latest
+      - INSTALL_DOCKER=false
+      - INSTALL_PODMAN=true
+      - INSTALL_DOCKER_COMPOSE=false
+      - DOCKER_COMPOSE_VERSION=latest
   environment:
     - PORT=18789
     - NODE_ENV=${OPENCLAW_NODE_ENV:-production}
     - npm_config_registry=${npm_config_registry:-https://registry.npmmirror.com/}
     - pnpm_config_registry=${pnpm_config_registry:-https://registry.npmmirror.com/}
     - TZ=${TZ:-Asia/Shanghai}
-    - OPENCLAW_VERSION=${OPENCLAW_VERSION:-latest}
+    - OPENCLAW_VERSION=latest
   restart: ${CONTAINER_RESTART_POLICY:-unless-stopped}
   logging:
     driver: json-file
@@ -42,6 +43,7 @@ x-base-service:
 
 # 服务配置
 services:
+
   # 网关 1 - sme1
   sme1:
     <<: *base-service
@@ -95,4 +97,3 @@ services:
       - ./share:/home/node/share:U,z                             # Config share
     environment:
       - GATEWAY_ID=serv
-

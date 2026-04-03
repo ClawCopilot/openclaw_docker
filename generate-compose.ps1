@@ -91,6 +91,8 @@ $pipMirror = if ($env:PIP_MIRROR) { $env:PIP_MIRROR } else { "tuna" }
 $lines += "      - PIP_MIRROR=$pipMirror"
 $rustVersion = if ($env:RUST_VERSION) { $env:RUST_VERSION } else { "stable" }
 $lines += "      - RUST_VERSION=$rustVersion"
+$rustupMirror = if ($env:RUSTUP_MIRROR) { $env:RUSTUP_MIRROR } else { "tuna" }
+$lines += "      - RUSTUP_MIRROR=$rustupMirror"
 $rustMirror = if ($env:RUST_CRATES_MIRROR) { $env:RUST_CRATES_MIRROR } else { "tuna" }
 $lines += "      - RUST_CRATES_MIRROR=$rustMirror"
 $goVersion = if ($env:GO_VERSION) { $env:GO_VERSION } else { "1.22.0" }

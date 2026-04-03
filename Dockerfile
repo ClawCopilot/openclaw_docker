@@ -143,9 +143,17 @@ RUN mkdir -p "$HOME/.config/pip" && \
 
 # 安装 Rust
 ARG RUST_VERSION=stable
+ARG RUSTUP_MIRROR=tuna
 RUN echo "[LOG] 检查 Rust 是否已安装..." && \
     command -v rustc > /dev/null 2>&1 && echo "[LOG] Rust 已安装，跳过安装步骤..." || ( \
         echo "[LOG] Rust 未安装，开始安装 Rust $RUST_VERSION..." && \
+        if [ "$RUSTUP_MIRROR" = "tuna" ]; then \
+            export RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup" && \
+            export RUSTUP_UPDATE_ROOT="https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup"; \
+        elif [ "$RUSTUP_MIRROR" = "ustc" ]; then \
+            export RUSTUP_DIST_SERVER="https://mirrors.ustc.edu.cn/rustup" && \
+            export RUSTUP_UPDATE_ROOT="https://mirrors.ustc.edu.cn/rustup/rustup"; \
+        fi && \
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $RUST_VERSION && \
         echo "[LOG] Rust 安装完成..." \
     )
