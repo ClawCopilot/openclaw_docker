@@ -13,7 +13,8 @@
 
 ## 版本
 
-- 当前版本: v2026.4.3
+- 当前版本: v2026.4.4
+- 上一版本: v2026.4.3
 
 # openclaw_docker
 ⭐ 一键部署 OpenClaw 多网关 | 国内镜像加速 | 开箱即用
@@ -55,6 +56,26 @@ cd openclaw_docker
 ## 贡献
 
 欢迎贡献！请随时提交 Pull Request。
+
+---
+
+## 💖 支持我们
+
+如果这个项目对您有帮助，欢迎打赏支持我们继续开发和维护！
+
+<div align="center">
+
+### ☕ 请作者喝杯咖啡
+
+您的每一份支持都是我们前进的动力！
+
+<img src="./images/weixin_pay.jpg" alt="微信打赏" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+
+**微信扫一扫，支持开源项目** 🙏
+
+</div>
+
+---
 
 ## 许可证
 

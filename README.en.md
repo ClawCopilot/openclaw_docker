@@ -11,7 +11,8 @@
 
 ## Version
 
-- Current version: v2026.4.3
+- Current version: v2026.4.4
+- Previous version: v2026.4.3
 
 ## Overview
 
@@ -34,6 +35,12 @@ This project provides a Docker-based deployment solution for OpenClaw with multi
 - **Container tools installation**: Optional installation of Docker, Podman, Docker Compose
 - **Fault-tolerant installation**: Tool installation failure does not affect container creation
 - **Rustup mirror acceleration**: Support domestic mirrors for Rust toolchain download
+- **Ollama support**: Optional Ollama installation with domestic mirror acceleration
+- **VLLM support**: Optional VLLM installation with domestic pip mirror
+- **uv support**: Optional uv (Python package manager) installation with GitHub proxy acceleration
+- **PATH optimization**: Automatic PATH deduplication and optimization
+- **npm mirror optimization**: Complete .npmrc configuration with 50+ common tool mirrors
+- **Security audit disable**: Support disabling npm audit for faster installation
 
 ## Prerequisites
 
@@ -284,6 +291,26 @@ If you encounter permission issues, run the permission fix script:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## 💖 Support Us
+
+If this project helps you, consider buying us a coffee to support continued development and maintenance!
+
+<div align="center">
+
+### ☕ Buy Us a Coffee
+
+Your support drives us forward!
+
+<img src="./images/weixin_pay.jpg" alt="WeChat Pay" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+
+**Scan with WeChat to support open source** 🙏
+
+</div>
+
+---
 
 ## License
 
