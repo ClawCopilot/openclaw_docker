@@ -89,8 +89,42 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     wget \
     ca-certificates \
     build-essential \
-    cron && \
-    echo "[LOG] 依赖包安装完成，开始清理..." && \    
+    cron \
+    cmake \
+    g++ \
+    gh \
+    lsof \
+    gnupg \
+    gosu \
+    hostname \
+    jq \
+    libasound2t64 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcairo2 \
+    libcups2t64 \
+    libdbus-1-3 \
+    libgbm1 \
+    libglib2.0-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    make \
+    neovim \
+    openssl \
+    procps \
+    tar \
+    unzip && \
+    echo "[LOG] 依赖包安装完成，开始清理..." && \	
     apt-get clean && \
     echo "[LOG] 清理完成"    
 
@@ -142,7 +176,54 @@ RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
         echo "[LOG] NodeJS 安装完成" \
     ) && \
     node --version && \
-    npm --version    
+    npm --version
+
+# 安装 Chrome for Testing (Chromium)
+RUN echo "[LOG] 安装 Chrome for Testing..." && \
+    CFT_VERSION="$(curl -fsSL https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)" && \
+    DEB_ARCH="$(dpkg --print-architecture)" && \
+    case "$DEB_ARCH" in \
+      amd64) CFT_ARCH=linux64 ;; \
+      arm64) CFT_ARCH=linux-arm64 ;; \
+      *) echo "unsupported architecture for chromium: $DEB_ARCH" >&2; exit 1 ;; \
+    esac && \
+    CFT_ZIP="chrome-${CFT_ARCH}.zip" && \
+    CFT_DIR="chrome-${CFT_ARCH}" && \
+    CFT_URL="https://storage.googleapis.com/chrome-for-testing-public/${CFT_VERSION}/${CFT_ARCH}/${CFT_ZIP}" && \
+    curl -fsSL "$CFT_URL" -o "/tmp/${CFT_ZIP}" && \
+    rm -rf "/opt/${CFT_DIR}" && \
+    unzip -q "/tmp/${CFT_ZIP}" -d /opt && \
+    rm -f "/tmp/${CFT_ZIP}" && \
+    ln -sf "/opt/${CFT_DIR}/chrome" /usr/local/bin/chromium && \
+    chromium --version >/dev/null && \
+    echo "[LOG] Chrome for Testing 安装完成"
+
+# 安装 sshx (远程终端共享)
+RUN echo "[LOG] 安装 sshx..." && \
+    curl -sSf https://sshx.io/get | sh && \
+    if [ -x "$HOME/.local/bin/sshx" ]; then \
+        ln -sf "$HOME/.local/bin/sshx" /usr/local/bin/sshx; \
+    fi && \
+    sshx --help >/dev/null && \
+    echo "[LOG] sshx 安装完成"
+
+# 安装 DDNS-GO (动态 DNS，非关键，失败不中断构建)
+RUN echo "[LOG] 安装 DDNS-GO..." && \
+    ( \
+        DDNS_VERSION="$(curl -fsSL https://api.github.com/repos/jeessy2/ddns-go/releases/latest 2>/dev/null | python3 -c 'import sys,json; print(json.load(sys.stdin)[\"tag_name\"])' 2>/dev/null || echo 'v6.1.0')" && \
+        DEB_ARCH="$(dpkg --print-architecture)" && \
+        case "$DEB_ARCH" in \
+          amd64) DDNS_ARCH=amd64 ;; \
+          arm64) DDNS_ARCH=arm64 ;; \
+          *) echo "unsupported architecture for ddns-go: $DEB_ARCH" >&2; exit 0 ;; \
+        esac && \
+        curl -fsSL "https://github.com/jeessy2/ddns-go/releases/download/${DDNS_VERSION}/ddns-go_${DDNS_VERSION#v}_linux_${DDNS_ARCH}.tar.gz" -o /tmp/ddns-go.tar.gz && \
+        tar -xzf /tmp/ddns-go.tar.gz -C /tmp && \
+        mv /tmp/ddns-go /usr/local/bin/ddns-go && \
+        chmod +x /usr/local/bin/ddns-go && \
+        rm -f /tmp/ddns-go.tar.gz && \
+        ddns-go --version || true \
+    ) || echo "[WARN] DDNS-GO 安装失败，跳过继续构建..."
 
 # 设置环境变量
 ENV npm_config_registry=https://registry.npmmirror.com/
@@ -170,6 +251,13 @@ RUN mkdir -p "$HOME/.config/pip" && \
     elif [ "$PIP_MIRROR" = "douban" ]; then \
         printf '[global]\nindex-url = https://pypi.doubanio.com/simple/\ntrusted-host = pypi.doubanio.com\n' > "$HOME/.config/pip/pip.conf"; \
     fi
+
+# 安装 Python 工具包 (huggingface_hub 和 uv)
+RUN echo "[LOG] 安装 Python 工具包..." && \
+    python3 -m pip install --no-cache-dir --break-system-packages "huggingface_hub[cli]>=0.31.1" "uv>=0.6.0" && \
+    hf --help >/dev/null && \
+    uv --version >/dev/null && \
+    echo "[LOG] Python 工具包安装完成"
 
 # 安装 Rust（安装失败不影响容器创建）
 ARG RUST_VERSION=stable
@@ -286,6 +374,15 @@ RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
         npm install -g "openclaw@$OPENCLAW_VERSION" && \
         echo "[LOG] OpenClaw 安装完成..." \
     )
+
+# 安装开发者 CLI 工具
+RUN echo "[LOG] 安装开发者 CLI 工具..." && \
+    npm install -g --no-audit --no-fund opencode-ai @openai/codex @anthropic-ai/claude-code @larksuite/cli && \
+    npx skills add larksuite/cli -y -g && \
+    echo "[LOG] 开发者 CLI 工具安装完成"
+
+# 安装 PM2 进程管理器
+RUN npm install -g --no-audit --no-fund pm2 && pm2 --version
 
 # 复制 entrypoint 脚本
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
