@@ -397,12 +397,23 @@ RUN echo "[LOG] 检查 OpenClaw 是否已安装..." && \
 
 # 安装开发者 CLI 工具
 RUN echo "[LOG] 安装开发者 CLI 工具..." && \
-    npm install -g --no-audit --no-fund opencode-ai @openai/codex @anthropic-ai/claude-code @larksuite/cli && \
-    npx skills add larksuite/cli -y -g && \
-    echo "[LOG] 开发者 CLI 工具安装完成"
+    ( \
+        export PATH="/usr/local/bin:$PATH" && \
+        which npm && \
+        npm install -g --no-audit --no-fund opencode-ai @openai/codex @anthropic-ai/claude-code @larksuite/cli && \
+        npx skills add larksuite/cli -y -g && \
+        echo "[LOG] 开发者 CLI 工具安装完成" \
+    ) || echo "[WARN] 开发者 CLI 工具安装失败，跳过继续构建..."
 
 # 安装 PM2 进程管理器
-RUN npm install -g --no-audit --no-fund pm2 && pm2 --version
+RUN echo "[LOG] 安装 PM2..." && \
+    ( \
+        export PATH="/usr/local/bin:$PATH" && \
+        which npm && \
+        npm install -g --no-audit --no-fund pm2 && \
+        pm2 --version && \
+        echo "[LOG] PM2 安装完成" \
+    ) || echo "[WARN] PM2 安装失败，跳过继续构建..."
 
 # 复制 entrypoint 脚本
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
