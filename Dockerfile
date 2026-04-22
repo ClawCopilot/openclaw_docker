@@ -180,25 +180,35 @@ RUN echo "[LOG] 检查 NodeJS 是否已安装..." && \
     node --version && \
     npm --version
 
-# 安装 Chrome for Testing (Chromium)
+# 安装 Chrome for Testing (Chromium) - 使用镜像源和重试机制
 RUN echo "[LOG] 安装 Chrome for Testing..." && \
-    CFT_VERSION="$(curl -fsSL https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE)" && \
-    DEB_ARCH="$(dpkg --print-architecture)" && \
-    case "$DEB_ARCH" in \
-      amd64) CFT_ARCH=linux64 ;; \
-      arm64) CFT_ARCH=linux-arm64 ;; \
-      *) echo "unsupported architecture for chromium: $DEB_ARCH" >&2; exit 1 ;; \
-    esac && \
-    CFT_ZIP="chrome-${CFT_ARCH}.zip" && \
-    CFT_DIR="chrome-${CFT_ARCH}" && \
-    CFT_URL="https://storage.googleapis.com/chrome-for-testing-public/${CFT_VERSION}/${CFT_ARCH}/${CFT_ZIP}" && \
-    curl -fsSL "$CFT_URL" -o "/tmp/${CFT_ZIP}" && \
-    rm -rf "/opt/${CFT_DIR}" && \
-    unzip -q "/tmp/${CFT_ZIP}" -d /opt && \
-    rm -f "/tmp/${CFT_ZIP}" && \
-    ln -sf "/opt/${CFT_DIR}/chrome" /usr/local/bin/chromium && \
-    chromium --version >/dev/null && \
-    echo "[LOG] Chrome for Testing 安装完成"
+    ( \
+        set -e && \
+        CFT_VERSION="$(curl -fsSL --retry 3 --retry-delay 2 https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE 2>/dev/null || echo '132.0.6834.83')" && \
+        DEB_ARCH="$(dpkg --print-architecture)" && \
+        case "$DEB_ARCH" in \
+          amd64) CFT_ARCH=linux64 ;; \
+          arm64) CFT_ARCH=linux-arm64 ;; \
+          *) echo "unsupported architecture for chromium: $DEB_ARCH" >&2; exit 1 ;; \
+        esac && \
+        CFT_ZIP="chrome-${CFT_ARCH}.zip" && \
+        CFT_DIR="chrome-${CFT_ARCH}" && \
+        \
+        # 尝试多个镜像源下载 \
+        echo "[LOG] 尝试从官方源下载 Chrome for Testing ${CFT_VERSION}..." && \
+        CFT_URL="https://storage.googleapis.com/chrome-for-testing-public/${CFT_VERSION}/${CFT_ARCH}/${CFT_ZIP}" && \
+        (curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 30 "$CFT_URL" -o "/tmp/${CFT_ZIP}" 2>/dev/null) || \
+        (echo "[WARN] 官方源下载失败，尝试镜像源..." && \
+         CFT_URL="https://mirrors.ustc.edu.cn/chrome-for-testing-public/${CFT_VERSION}/${CFT_ARCH}/${CFT_ZIP}" && \
+         curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 30 "$CFT_URL" -o "/tmp/${CFT_ZIP}") && \
+        \
+        rm -rf "/opt/${CFT_DIR}" && \
+        unzip -q "/tmp/${CFT_ZIP}" -d /opt && \
+        rm -f "/tmp/${CFT_ZIP}" && \
+        ln -sf "/opt/${CFT_DIR}/chrome" /usr/local/bin/chromium && \
+        chromium --version >/dev/null && \
+        echo "[LOG] Chrome for Testing 安装完成" \
+    ) || echo "[WARN] Chrome for Testing 安装失败，跳过继续构建..."
 
 # 安装 sshx (远程终端共享)
 RUN echo "[LOG] 安装 sshx..." && \
