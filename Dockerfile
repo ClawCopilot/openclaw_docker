@@ -102,15 +102,21 @@ RUN echo "[LOG] 安装 neovim..." && \
     (apt-get install -y --no-install-recommends neovim && echo "[LOG] neovim 安装完成") || \
     echo "[WARN] neovim 安装失败，跳过继续构建..."
 
-# 安装 Chromium 依赖库
+# 安装 Chromium 依赖库（使用 || true 确保失败不中断构建）
 RUN echo "[LOG] 安装 Chromium 依赖库..." && \
     apt-get update -y --allow-unauthenticated && \
-    apt-get install -y --no-install-recommends \
-    libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2t64 \
-    libdbus-1-3 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
-    libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxrandr2 && \
-    apt-get clean && \
-    echo "[LOG] Chromium 依赖库安装完成"
+    (apt-get install -y --no-install-recommends \
+        libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2t64 \
+        libdbus-1-3 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
+        libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxrandr2 && \
+     echo "[LOG] Chromium 依赖库安装完成") || \
+    (echo "[WARN] 部分 Chromium 依赖库安装失败，尝试安装替代包名..." && \
+     apt-get install -y --no-install-recommends \
+        libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2 \
+        libdbus-1-3 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
+        libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxrandr2 && \
+     echo "[LOG] Chromium 依赖库(替代包名)安装完成") || \
+    echo "[WARN] Chromium 依赖库安装失败，跳过继续构建..."
 
 # 安装 GitHub CLI (gh) - 需要单独添加源
 RUN echo "[LOG] 安装 GitHub CLI..." && \
