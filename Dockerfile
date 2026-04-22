@@ -266,10 +266,18 @@ RUN mkdir -p "$HOME/.config/pip" && \
 
 # 安装 Python 工具包 (huggingface_hub 和 uv)
 RUN echo "[LOG] 安装 Python 工具包..." && \
-    python3 -m pip install --no-cache-dir --break-system-packages "huggingface_hub[cli]>=0.31.1" "uv>=0.6.0" && \
-    hf --help >/dev/null && \
-    uv --version >/dev/null && \
-    echo "[LOG] Python 工具包安装完成"
+    ( \
+        set -e && \
+        # 确保 pip 已安装 \
+        python3 -m ensurepip --upgrade 2>/dev/null || apt-get install -y python3-pip && \
+        # 升级 pip \
+        python3 -m pip install --upgrade pip && \
+        # 安装 huggingface_hub 和 uv \
+        python3 -m pip install --no-cache-dir "huggingface_hub[cli]>=0.31.1" "uv>=0.6.0" && \
+        hf --help >/dev/null && \
+        uv --version >/dev/null && \
+        echo "[LOG] Python 工具包安装完成" \
+    ) || echo "[WARN] Python 工具包安装失败，跳过继续构建..."
 
 # 安装 Rust（安装失败不影响容器创建）
 ARG RUST_VERSION=stable
