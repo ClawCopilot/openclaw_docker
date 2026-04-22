@@ -5,6 +5,9 @@
 - [English](./README.en.md)
 - [中文](./README.zh.md)
 - [日本語](./README.ja.md)
+- [Español](./README.es.md)
+- [Français](./README.fr.md)
+- [Deutsch](./README.de.md)
 
 ## 官方网站
 

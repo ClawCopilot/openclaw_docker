@@ -3,6 +3,9 @@
 [![Language](https://img.shields.io/badge/Language-English-blue)](./README.en.md)
 [![Language](https://img.shields.io/badge/Language-中文-red)](./README.zh.md)
 [![Language](https://img.shields.io/badge/Language-日本語-green)](./README.ja.md)
+[![Language](https://img.shields.io/badge/Language-Español-orange)](./README.es.md)
+[![Language](https://img.shields.io/badge/Language-Français-purple)](./README.fr.md)
+[![Language](https://img.shields.io/badge/Language-Deutsch-yellow)](./README.de.md)
 
 ## 官方网站
 
