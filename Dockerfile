@@ -73,59 +73,44 @@ RUN apt-get update -y --allow-unauthenticated && \
 # 将node用户添加root用户组, sudo 不需要密码
 RUN echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers    
 
-# 安装构建阶段依赖（包含编译工具）
-RUN echo "[LOG] 开始安装构建阶段依赖..." && \
+# 安装构建阶段依赖（包含编译工具）- 分批安装便于排查问题
+RUN echo "[LOG] 开始安装基础依赖..." && \
     apt-get update -y --allow-unauthenticated && \
-    echo "[LOG] 包列表更新完成，开始安装依赖包..." && \
     apt-get install -y --no-install-recommends \
-    git \
-    vim \
-    sudo \
-    supervisor \
-    python3 \
-    python3-pip \
-    curl \
-    nginx \
-    wget \
-    ca-certificates \
-    build-essential \
-    cron \
-    cmake \
-    g++ \
-    lsof \
-    gnupg \
-    gosu \
-    hostname \
-    jq \
-    libasound2t64 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libatspi2.0-0 \
-    libcairo2 \
-    libcups2t64 \
-    libdbus-1-3 \
-    libgbm1 \
-    libglib2.0-0 \
-    libnspr4 \
-    libnss3 \
-    libpango-1.0-0 \
-    libx11-6 \
-    libxcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxkbcommon0 \
-    libxrandr2 \
-    make \
-    neovim \
-    openssl \
-    procps \
-    tar \
-    unzip && \
-    echo "[LOG] 依赖包安装完成，开始清理..." && \	
+    git vim sudo supervisor python3 python3-pip curl nginx wget ca-certificates build-essential cron make cmake g++ tar unzip && \
     apt-get clean && \
-    echo "[LOG] 清理完成"
+    echo "[LOG] 基础依赖安装完成"
+
+# 安装系统工具
+RUN echo "[LOG] 安装系统工具..." && \
+    apt-get update -y --allow-unauthenticated && \
+    apt-get install -y --no-install-recommends \
+    lsof gnupg hostname jq openssl procps && \
+    apt-get clean && \
+    echo "[LOG] 系统工具安装完成"
+
+# 安装 gosu (可能不在默认源中)
+RUN echo "[LOG] 安装 gosu..." && \
+    (apt-get install -y --no-install-recommends gosu && echo "[LOG] gosu 安装完成") || \
+    (echo "[WARN] gosu 安装失败，尝试从 GitHub 下载..." && \
+     curl -fsSL https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64 -o /usr/local/bin/gosu && \
+     chmod +x /usr/local/bin/gosu && echo "[LOG] gosu 从 GitHub 安装完成") || \
+    echo "[WARN] gosu 安装失败，跳过继续构建..."
+
+# 安装 neovim
+RUN echo "[LOG] 安装 neovim..." && \
+    (apt-get install -y --no-install-recommends neovim && echo "[LOG] neovim 安装完成") || \
+    echo "[WARN] neovim 安装失败，跳过继续构建..."
+
+# 安装 Chromium 依赖库
+RUN echo "[LOG] 安装 Chromium 依赖库..." && \
+    apt-get update -y --allow-unauthenticated && \
+    apt-get install -y --no-install-recommends \
+    libasound2t64 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcairo2 libcups2t64 \
+    libdbus-1-3 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 \
+    libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxrandr2 && \
+    apt-get clean && \
+    echo "[LOG] Chromium 依赖库安装完成"
 
 # 安装 GitHub CLI (gh) - 需要单独添加源
 RUN echo "[LOG] 安装 GitHub CLI..." && \
