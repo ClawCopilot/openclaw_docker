@@ -92,7 +92,6 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     cron \
     cmake \
     g++ \
-    gh \
     lsof \
     gnupg \
     gosu \
@@ -126,7 +125,19 @@ RUN echo "[LOG] 开始安装构建阶段依赖..." && \
     unzip && \
     echo "[LOG] 依赖包安装完成，开始清理..." && \	
     apt-get clean && \
-    echo "[LOG] 清理完成"    
+    echo "[LOG] 清理完成"
+
+# 安装 GitHub CLI (gh) - 需要单独添加源
+RUN echo "[LOG] 安装 GitHub CLI..." && \
+    ( \
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
+        chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends gh && \
+        apt-get clean && \
+        echo "[LOG] GitHub CLI 安装完成" \
+    ) || echo "[WARN] GitHub CLI 安装失败，跳过继续构建..."    
 
 # 配置supervisor
 RUN mkdir -p /var/log/supervisor && \
