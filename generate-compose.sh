@@ -11,6 +11,7 @@ fi
 # 设置默认值
 GATEWAY_SERVICES=${GATEWAY_SERVICES:-serv,coder1,coder2,coder3}
 GATEWAY_PORTS=${GATEWAY_PORTS:-}
+GATEWAY_EXTRA_PORTS=${GATEWAY_EXTRA_PORTS:-}
 GATEWAY_VOLUMES=${GATEWAY_VOLUMES:-}
 
 # 解析服务列表
@@ -39,6 +40,23 @@ for volume in "${volumes[@]}"; do
       volume_map[$service]="$host_path:$container_path"
     else
       volume_map[$service]="${volume_map[$service]},$host_path:$container_path"
+    fi
+  fi
+done
+
+# 解析额外端口配置
+declare -A extra_port_map
+IFS=',' read -ra extra_ports <<< "$GATEWAY_EXTRA_PORTS"
+for extra_port in "${extra_ports[@]}"; do
+  IFS=':' read -ra parts <<< "$extra_port"
+  if [ ${#parts[@]} -eq 3 ]; then
+    service="${parts[0]}"
+    host_port="${parts[1]}"
+    container_port="${parts[2]}"
+    if [ -z "${extra_port_map[$service]}" ]; then
+      extra_port_map[$service]="$host_port:$container_port"
+    else
+      extra_port_map[$service]="${extra_port_map[$service]},$host_port:$container_port"
     fi
   fi
 done
@@ -130,11 +148,28 @@ EOF
 EOF
   fi
 
-  if [ -n "$ports" ]; then
+  # 添加端口配置
+  has_ports=false
+  if [ -n "$ports" ] || [[ ${extra_port_map[$gateway_id]+_} ]]; then
+    has_ports=true
     cat >> docker-compose.yml << EOF
     ports:
+EOF
+  fi
+
+  # 添加 GATEWAY_PORTS 配置的端口
+  if [ -n "$ports" ]; then
+    cat >> docker-compose.yml << EOF
       $ports
 EOF
+  fi
+
+  # 添加额外端口映射
+  if [[ ${extra_port_map[$gateway_id]+_} ]]; then
+    IFS=',' read -ra service_extra_ports <<< "${extra_port_map[$gateway_id]}"
+    for port_mapping in "${service_extra_ports[@]}"; do
+      echo "      - \"$port_mapping\"" >> docker-compose.yml
+    done
   fi
 
   # 添加固定 volumes

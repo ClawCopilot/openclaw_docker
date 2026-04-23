@@ -19,6 +19,7 @@ if (Test-Path -Path ".env") {
 # 设置默认值
 $gatewayServices = "serv,coder1,coder2,coder3"
 $gatewayPorts = ""
+$gatewayExtraPorts = ""
 $gatewayVolumes = ""
 
 if ($env:GATEWAY_SERVICES) {
@@ -27,6 +28,10 @@ if ($env:GATEWAY_SERVICES) {
 
 if ($env:GATEWAY_PORTS) {
     $gatewayPorts = $env:GATEWAY_PORTS
+}
+
+if ($env:GATEWAY_EXTRA_PORTS) {
+    $gatewayExtraPorts = $env:GATEWAY_EXTRA_PORTS
 }
 
 if ($env:GATEWAY_VOLUMES) {
@@ -61,6 +66,24 @@ if ($gatewayVolumes) {
                 $volumeMap[$serviceName] = @()
             }
             $volumeMap[$serviceName] += $volumeEntry
+        }
+    }
+}
+
+# 解析额外端口配置
+$extraPortMap = @{}
+if ($gatewayExtraPorts) {
+    $gatewayExtraPorts.Split(',') | ForEach-Object {
+        $parts = $_.Split(':')
+        if ($parts.Length -eq 3) {
+            $serviceName = $parts[0].Trim()
+            $hostPort = $parts[1].Trim()
+            $containerPort = $parts[2].Trim()
+            $portEntry = "$hostPort`:$containerPort"
+            if (-not $extraPortMap.ContainsKey($serviceName)) {
+                $extraPortMap[$serviceName] = @()
+            }
+            $extraPortMap[$serviceName] += $portEntry
         }
     }
 }
@@ -143,10 +166,24 @@ foreach ($serviceName in $services) {
         $lines += "          memory: $($env:CONTAINER_MEM_LIMIT)"
     }
 
+    # 添加端口配置
+    $hasPorts = $false
+    if ($portMap.ContainsKey($gatewayId) -or $extraPortMap.ContainsKey($gatewayId)) {
+        $hasPorts = $true
+        $lines += "    ports:"
+    }
+
+    # 添加 GATEWAY_PORTS 配置的端口
     if ($portMap.ContainsKey($gatewayId)) {
         $port = $portMap[$gatewayId]
-        $lines += "    ports:"
         $lines += "      - `"$port`:18789`""
+    }
+
+    # 添加额外端口映射
+    if ($extraPortMap.ContainsKey($gatewayId)) {
+        foreach ($portMapping in $extraPortMap[$gatewayId]) {
+            $lines += "      - `"$portMapping`""
+        }
     }
 
     $lines += "    volumes:"
