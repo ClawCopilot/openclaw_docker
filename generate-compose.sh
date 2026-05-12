@@ -3,9 +3,16 @@
 # 切换到脚本所在目录
 cd "$(dirname "$0")"
 
-# 加载环境变量
+# 加载环境变量（健壮版：支持空格、引号、空值）
 if [ -f .env ]; then
-  export $(cat .env | grep -v '#' | xargs)
+  while IFS='=' read -r key value || [ -n "$key" ]; do
+    # 跳过注释行和空行
+    [[ "$key" =~ ^[[:space:]]*# || -z "${key// }" ]] && continue
+    # 移除值两侧的引号
+    value="${value%\"}"; value="${value#\"}"
+    value="${value%\'}"; value="${value#\'}"
+    export "$key=$value"
+  done < <(grep -v '^\s*#' .env | grep -v '^\s*$')
 fi
 
 # 设置默认值
@@ -70,6 +77,7 @@ x-base-service:
     context: .
     args:
       - BASE_IMAGE=${BASE_IMAGE:-ghcr.m.daocloud.io/openclaw/openclaw:latest}
+      - MIRROR_URL=${MIRROR_URL:-mirrors.aliyun.com}
       - CONTAINER_HOME=${CONTAINER_HOME:-/home/node}
       - TZ=${TZ:-Asia/Shanghai}
       - PIP_MIRROR=${PIP_MIRROR:-tuna}

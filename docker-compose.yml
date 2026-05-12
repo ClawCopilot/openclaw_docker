@@ -5,6 +5,7 @@ x-base-service:
     context: .
     args:
       - BASE_IMAGE=${BASE_IMAGE:-ghcr.m.daocloud.io/openclaw/openclaw:latest}
+      - MIRROR_URL=${MIRROR_URL:-mirrors.aliyun.com}
       - CONTAINER_HOME=${CONTAINER_HOME:-/home/node}
       - TZ=${TZ:-Asia/Shanghai}
       - PIP_MIRROR=${PIP_MIRROR:-tuna}

@@ -75,11 +75,27 @@ RUN echo 'node ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # 安装构建阶段依赖（包含编译工具）- 分批安装便于排查问题
 RUN echo "[LOG] 开始安装基础依赖..." && \
-    apt-get update -y --allow-unauthenticated && \
-    apt-get install -y --no-install-recommends \
-    git vim sudo supervisor python3 python3-pip curl nginx wget ca-certificates build-essential cron make cmake g++ tar unzip && \
-    apt-get clean && \
-    echo "[LOG] 基础依赖安装完成"
+    ( \
+        set -e && \
+        apt-get update -y --allow-unauthenticated && \
+        apt-get install -y --no-install-recommends --fix-missing \
+            git vim sudo supervisor python3 python3-pip curl nginx wget ca-certificates build-essential cron make cmake g++ tar unzip && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/* && \
+        echo "[LOG] 基础依赖安装完成" \
+    ) || ( \
+        echo "[WARN] 第一批安装失败，尝试分拆安装..." && \
+        apt-get update -y --allow-unauthenticated || true && \
+        echo "[LOG] 尝试逐个安装软件包..." && \
+        for pkg in git vim sudo supervisor python3 python3-pip curl nginx wget ca-certificates build-essential cron make cmake g++ tar unzip; do \
+            echo "[LOG] 正在安装 $pkg..." && \
+            apt-get install -y --no-install-recommends --fix-missing "$pkg" || \
+            echo "[WARN] $pkg 安装失败，跳过"; \
+        done && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/* && \
+        echo "[LOG] 基础依赖安装完成（部分可能跳过）" \
+    )
 
 # 安装系统工具
 RUN echo "[LOG] 安装系统工具..." && \
